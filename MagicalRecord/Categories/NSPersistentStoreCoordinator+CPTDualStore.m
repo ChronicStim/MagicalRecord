@@ -38,7 +38,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
         DDLogInfo(@"Active database for newPSC = %@",storeFilename);
         DDLogInfo(@"Active database for newPSC = %@",storeFilenameReportData);
         
-        NSManagedObjectModel *mom = [NSManagedObjectModel defaultModel];
+        NSManagedObjectModel *mom = [NSManagedObjectModel MR_defaultManagedObjectModel];
         if (!mom) {
             //NSAssert(NO, @"NSManagedObjectModel is nil");
             DDLogError(@"%@: No model to generate a store from", [self class]);
