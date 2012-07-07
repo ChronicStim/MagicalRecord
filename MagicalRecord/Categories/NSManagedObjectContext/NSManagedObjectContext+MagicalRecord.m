@@ -35,9 +35,16 @@ static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
     NSString *contextName = (self == defaultManagedObjectContext_) ? @"*** DEFAULT ***" : @"";
     contextName = (self == rootSavingContext) ? @"*** BACKGROUND SAVE ***" : contextName;
     
-    NSString *onMainThread = [NSThread isMainThread] ? @"*** MAIN THREAD ***" : @"";
+    NSString *onMainThread = [NSThread isMainThread] ? @"*** MAIN THREAD ***" : @"*** SECONDARY THREAD ***";
     
-    return [NSString stringWithFormat:@"%@: %@ Context %@", [self description], contextName, onMainThread];
+    NSString *familyTree = [NSString string];
+    NSManagedObjectContext *parentContext = [self parentContext];
+    while (nil != parentContext) {
+        familyTree = [familyTree stringByAppendingFormat:@" ==> %@;",[parentContext workingName]];
+        parentContext = [parentContext parentContext];
+    }
+
+    return [NSString stringWithFormat:@"%@: %@ Context %@ \nFamilyTree: %@", [self workingName], contextName, onMainThread,familyTree];
 }
 
 + (NSManagedObjectContext *) MR_defaultContext
@@ -74,6 +81,7 @@ static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
 {
     rootSavingContext = context;
     [rootSavingContext setMergePolicy:NSMergeByPropertyObjectTrumpMergePolicy];
+    [rootSavingContext setWorkingName:@"rootSavingsContext"];
 }
 
 + (void) MR_initializeDefaultContextWithCoordinator:(NSPersistentStoreCoordinator *)coordinator;
@@ -85,6 +93,7 @@ static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
         [self MR_setRootSavingContext:rootContext];
         
         NSManagedObjectContext *defaultContext = [self MR_newMainQueueContext];
+        [defaultContext setWorkingName:@"defaultContext"];
         [defaultContext setParentContext:rootSavingContext];
 
         [self MR_setDefaultContext:defaultContext];
