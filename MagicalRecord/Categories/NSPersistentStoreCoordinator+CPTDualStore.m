@@ -16,12 +16,6 @@
 #define kPSCConfigurationReports @"DiaryReportsModel"
 #define kPrefLastVersionRunKey @"prefLastVersionRun"
 
-#ifdef CONFIGURATION_Debug
-static const int ddLogLevel = LOG_LEVEL_VERBOSE;
-#else
-static const int ddLogLevel = LOG_LEVEL_WARN;
-#endif
-
 @implementation NSPersistentStoreCoordinator (CPTDualStore)
 
 static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
