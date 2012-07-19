@@ -12,5 +12,6 @@
 
 + (NSManagedObjectContext *) MR_contextForCurrentThread;
 + (void) MR_resetContextForCurrentThread;
++ (void) MR_runOnMainQueueWithoutDeadlocking:(void (^)(void))block;
 
 @end
