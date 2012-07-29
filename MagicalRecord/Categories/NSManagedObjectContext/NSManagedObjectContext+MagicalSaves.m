@@ -10,6 +10,7 @@
 #import "MagicalRecord+ErrorHandling.h"
 #import "NSManagedObjectContext+MagicalRecord.h"
 #import "MagicalRecord.h"
+#import "NSManagedObjectContext+MagicalThreading.h"
 
 @interface NSManagedObjectContext (InternalMagicalSaves)
 
@@ -63,7 +64,10 @@
 
 - (void) MR_saveNestedContextsErrorHandler:(void (^)(NSError *))errorCallback;
 {
-    [self performBlockAndWait:^{
+//    [self performBlockAndWait:^{
+//        [self MR_saveWithErrorCallback:errorCallback];
+//    }];
+    [NSManagedObjectContext MR_runOnMainQueueWithoutDeadlocking:^{
         [self MR_saveWithErrorCallback:errorCallback];
     }];
     [[self parentContext] MR_saveNestedContextsErrorHandler:errorCallback];
@@ -76,7 +80,11 @@
 
 - (void) MR_saveErrorHandler:(void (^)(NSError *))errorCallback;
 {
-    [self performBlockAndWait:^{
+//    [self performBlockAndWait:^{
+//        [self MR_saveWithErrorCallback:errorCallback];
+//    }];
+    
+    [NSManagedObjectContext MR_runOnMainQueueWithoutDeadlocking:^{
         [self MR_saveWithErrorCallback:errorCallback];
     }];
     

@@ -44,8 +44,8 @@ static NSString const * kMagicalRecordManagedObjectContextKey = @"MagicalRecord_
         MRLog(@"Running MR block from main thread");
         block();
     } else {
-        MRLog(@"Running MR block through dispatch_sync to main queue");
-        dispatch_sync(dispatch_get_main_queue(), block);
+        MRLog(@"Running MR block through dispatch_async to main queue");
+        dispatch_async(dispatch_get_main_queue(), block);
     }
 }
 
