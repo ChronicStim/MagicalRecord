@@ -117,9 +117,23 @@
 
         if (completion || self == [[self class] MR_rootSavingContext])
         {
+//            dispatch_async(dispatch_get_main_queue(), completion);
+            [NSManagedObjectContext MR_runOnMainQueueWithoutDeadlocking:completion];
+        }
+    }];
+}
+
+- (void) MR_unrelatedSaveInBackgroundErrorHandler:(void (^)(NSError *))errorCallback completion:(void (^)(void))completion;
+{
+    [self performBlock:^{
+        [self MR_saveWithErrorCallback:errorCallback];
+        
+        if (completion)
+        {
             dispatch_async(dispatch_get_main_queue(), completion);
         }
     }];
 }
+
 
 @end

@@ -42,6 +42,15 @@ void reset_action_queue(void)
     });
 }
 
++ (void) saveInBackgroundUsingUnrelatedContext:(NSManagedObjectContext *)localContext block:(void (^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion errorHandler:(void(^)(NSError *))errorHandler;
+{
+    dispatch_async(action_queue(), ^{
+        block(localContext);
+        
+        [localContext MR_unrelatedSaveInBackgroundErrorHandler:errorHandler completion:completion];
+    });
+}
+
 + (void) saveInBackgroundWithBlock:(void (^)(NSManagedObjectContext *))block completion:(void (^)(void))completion errorHandler:(void (^)(NSError *))errorHandler;
 {
     NSManagedObjectContext *mainContext  = [NSManagedObjectContext MR_defaultContext];
