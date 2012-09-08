@@ -6,6 +6,7 @@
 //
 
 #import "CoreData+MagicalRecord.h"
+#import "NSPersistentStoreCoordinator+CPTDualStore.h"
 
 static NSPersistentStoreCoordinator *defaultCoordinator_ = nil;
 NSString * const kMagicalRecordPSCDidCompleteiCloudSetupNotification = @"kMagicalRecordPSCDidCompleteiCloudSetupNotification";
@@ -28,7 +29,8 @@ NSString * const kMagicalRecordPSCDidCompleteiCloudSetupNotification = @"kMagica
 {
     if (defaultCoordinator_ == nil && [MagicalRecord shouldAutoCreateDefaultPersistentStoreCoordinator])
     {
-        [self MR_setDefaultStoreCoordinator:[self MR_newPersistentStoreCoordinator]];
+//        [self MR_setDefaultStoreCoordinator:[self MR_newPersistentStoreCoordinator]];
+        [self MR_setDefaultStoreCoordinator:[NSPersistentStoreCoordinator defaultCoordinator]];
     }
 	return defaultCoordinator_;
 }

@@ -17,5 +17,6 @@
 + (void) setupCoreDataStackWithStoreNamed:(NSString *)storeName;
 + (void) setupCoreDataStackWithAutoMigratingSqliteStoreNamed:(NSString *)storeName;
 
++ (void) setupCoreDataStackForCTP;
 
 @end

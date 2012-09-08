@@ -9,6 +9,8 @@
 #import "MagicalRecordPersistenceStrategy.h"
 #import <objc/runtime.h>
 
+#define kNSManagedObjectContextWorkingName @"kNSManagedObjectContextWorkingName"
+
 static NSManagedObjectContext *rootSavingContext = nil;
 static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
 
@@ -157,6 +159,20 @@ static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
         MRLog(@"-> Created %@", [context MR_description]);
     }
     return context;
+}
+
+- (void) MR_setContextWorkingName:(NSString *)workingName;
+{
+    [[self userInfo] setObject:workingName forKey:kNSManagedObjectContextWorkingName];
+}
+
+- (NSString *) MR_contextWorkingName;
+{
+    NSString *workingName = [[self userInfo] objectForKey:kNSManagedObjectContextWorkingName];
+    if (nil == workingName) {
+        workingName = @"UndefinedWorkingContext";
+    }
+    return workingName;
 }
 
 

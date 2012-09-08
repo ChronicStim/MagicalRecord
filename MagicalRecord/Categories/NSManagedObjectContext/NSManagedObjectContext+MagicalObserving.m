@@ -83,7 +83,9 @@ NSString * const kMagicalRecordDidMergeChangesFromiCloudNotification = @"kMagica
 	}
 	else
 	{
-		[self performSelectorOnMainThread:@selector(MR_mergeChangesFromNotification:) withObject:notification waitUntilDone:YES];
+        [NSManagedObjectContext MR_runOnMainQueueWithoutDeadlocking:^{
+            [self MR_mergeChangesFromNotification:notification];
+        }];
 	}
 }
 

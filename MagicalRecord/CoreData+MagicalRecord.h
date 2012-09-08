@@ -43,5 +43,6 @@
     #import "NSAttributeDescription+MagicalDataImport.h"
     #import "NSRelationshipDescription+MagicalDataImport.h"
     #import "NSEntityDescription+MagicalDataImport.h"
+    #import "NSPersistentStoreCoordinator+CPTDualStore.h"
 
 #endif
