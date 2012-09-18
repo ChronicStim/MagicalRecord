@@ -6,22 +6,13 @@
 //
 
 #import "CoreData+MagicalRecord.h"
+#import "MagicalRecordPersistenceStrategy.h"
 #import <objc/runtime.h>
-
-static NSManagedObjectContext *rootSavingContext = nil;
-static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
 
 #define kNSManagedObjectContextWorkingName @"kNSManagedObjectContextWorkingName"
 
-@interface NSManagedObjectContext (MagicalRecordInternal)
-
-- (void) MR_mergeChangesFromNotification:(NSNotification *)notification;
-- (void) MR_mergeChangesOnMainThread:(NSNotification *)notification;
-+ (void) MR_setDefaultContext:(NSManagedObjectContext *)moc;
-+ (void) MR_setRootSavingContext:(NSManagedObjectContext *)context;
-
-@end
-
+static NSManagedObjectContext *rootSavingContext = nil;
+static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
 
 @implementation NSManagedObjectContext (MagicalRecord)
 
@@ -36,16 +27,9 @@ static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
     NSString *contextName = (self == defaultManagedObjectContext_) ? @"*** DEFAULT ***" : @"";
     contextName = (self == rootSavingContext) ? @"*** BACKGROUND SAVE ***" : contextName;
     
-    NSString *onMainThread = [NSThread isMainThread] ? @"*** MAIN THREAD ***" : @"*** SECONDARY THREAD ***";
+    NSString *onMainThread = [NSThread isMainThread] ? @"*** MAIN THREAD ***" : @"";
     
-    NSString *familyTree = [NSString string];
-    NSManagedObjectContext *parentContext = [self parentContext];
-    while (nil != parentContext) {
-        familyTree = [familyTree stringByAppendingFormat:@" ==> %@;",[parentContext MR_contextWorkingName]];
-        parentContext = [parentContext parentContext];
-    }
-
-    return [NSString stringWithFormat:@"%@: %@ Context %@ \nFamilyTree: %@", [self MR_contextWorkingName], contextName, onMainThread,familyTree];
+    return [NSString stringWithFormat:@"%@: %@ Context %@", [self description], contextName, onMainThread];
 }
 
 + (NSManagedObjectContext *) MR_defaultContext
@@ -82,25 +66,43 @@ static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
 {
     rootSavingContext = context;
     [rootSavingContext setMergePolicy:NSMergeByPropertyObjectTrumpMergePolicy];
-    [rootSavingContext MR_setContextWorkingName:@"rootSavingsContext"];
 }
 
 + (void) MR_initializeDefaultContextWithCoordinator:(NSPersistentStoreCoordinator *)coordinator;
 {
-    if (defaultManagedObjectContext_ == nil)
-    {
-        NSManagedObjectContext *rootContext = [self MR_contextWithStoreCoordinator:coordinator];
-        
-        [self MR_setRootSavingContext:rootContext];
-        
-        NSManagedObjectContext *defaultContext = [self MR_newMainQueueContext];
-        [defaultContext MR_setContextWorkingName:@"defaultContext"];
-        [defaultContext setParentContext:rootSavingContext];
-
-        [self MR_setDefaultContext:defaultContext];
-    }
+    [[MagicalRecord persistenceStrategy] setUpContextsWithCoordinator:coordinator];
 }
 
++ (void)MR_makeContext:(NSManagedObjectContext *)sourceContext mergeChangesToContext:(NSManagedObjectContext *)targetContext
+{
+    [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification
+                                                      object:sourceContext
+                                                       queue:nil
+                                                  usingBlock:^(NSNotification *note) {
+                                                      NSAssert(note.object != nil, nil);
+                                                      NSAssert(targetContext!= nil, nil);
+                                                      
+                                                      [targetContext performBlock:^{
+                                                          [targetContext mergeChangesFromContextDidSaveNotification:note];
+                                                      }];
+                                                  }];
+}
+
++ (void)MR_makeContextObtainPermanentIDsBeforeSaving:(NSManagedObjectContext *)context
+{
+    [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextWillSaveNotification
+                                                      object:context
+                                                       queue:nil
+                                                  usingBlock:^(NSNotification *note) {
+                                                     [context performBlockAndWait:^{
+                                                         NSArray *insertedObjects = [[context insertedObjects] allObjects];
+                                                         NSError *error;
+                                                         if (![context obtainPermanentIDsForObjects:insertedObjects error:&error]) {
+                                                             [MagicalRecord handleErrors:error];
+                                                         }
+                                                     }];
+                                                  }];
+}
 + (void) MR_resetDefaultContext
 {
     void (^resetBlock)(void) = ^{

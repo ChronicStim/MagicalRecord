@@ -10,7 +10,6 @@
 #import "MagicalRecord+ErrorHandling.h"
 #import "NSManagedObjectContext+MagicalRecord.h"
 #import "MagicalRecord.h"
-#import "NSManagedObjectContext+MagicalThreading.h"
 
 @interface NSManagedObjectContext (InternalMagicalSaves)
 
@@ -30,18 +29,20 @@
     }
     
     MRLog(@"-> Saving %@", [self MR_description]);
-
-    NSError *error = nil;
-	BOOL saved = NO;
+    
+    __block NSError *error = nil;
+	__block BOOL saved = NO;
 	@try
 	{
-        saved = [self save:&error];
+        [self performBlockAndWait:^{
+            saved = [self save:&error];
+        }];
 	}
 	@catch (NSException *exception)
 	{
 		MRLog(@"Unable to perform save: %@", (id)[exception userInfo] ?: (id)[exception reason]);
 	}
-	@finally 
+	@finally
     {
         if (!saved)
         {
@@ -64,10 +65,7 @@
 
 - (void) MR_saveNestedContextsErrorHandler:(void (^)(NSError *))errorCallback;
 {
-//    [self performBlockAndWait:^{
-//        [self MR_saveWithErrorCallback:errorCallback];
-//    }];
-    [NSManagedObjectContext MR_runOnMainQueueWithoutDeadlocking:^{
+    [self performBlockAndWait:^{
         [self MR_saveWithErrorCallback:errorCallback];
     }];
     [[self parentContext] MR_saveNestedContextsErrorHandler:errorCallback];
@@ -75,22 +73,19 @@
 
 - (void) MR_save;
 {
-    [self MR_saveErrorHandler:nil];    
+    [self MR_saveErrorHandler:nil];
 }
 
 - (void) MR_saveErrorHandler:(void (^)(NSError *))errorCallback;
 {
-//    [self performBlockAndWait:^{
-//        [self MR_saveWithErrorCallback:errorCallback];
-//    }];
-    
-    [NSManagedObjectContext MR_runOnMainQueueWithoutDeadlocking:^{
+    [self performBlockAndWait:^{
         [self MR_saveWithErrorCallback:errorCallback];
     }];
     
     if (self == [[self class] MR_defaultContext])
     {
-        [[[self class] MR_rootSavingContext] MR_saveInBackgroundErrorHandler:errorCallback];
+        // Since this is a synchronous call, I made the background context save synchronous as well to reflect the intent.
+        [[[self class] MR_rootSavingContext] MR_saveErrorHandler:errorCallback];
     }
 }
 
@@ -107,33 +102,23 @@
 - (void) MR_saveInBackgroundErrorHandler:(void (^)(NSError *))errorCallback completion:(void (^)(void))completion;
 {
     [self performBlock:^{
+        // Save the context
         [self MR_saveWithErrorCallback:errorCallback];
-
+        
+        // If we're the default context, save to disk too (the user expects it to persist)
         if (self == [[self class] MR_defaultContext])
         {
             [[[self class] MR_rootSavingContext] MR_saveInBackgroundErrorHandler:errorCallback completion:completion];
-            return;
         }
-
-        if (completion || self == [[self class] MR_rootSavingContext])
+        else
         {
-//            dispatch_async(dispatch_get_main_queue(), completion);
-            [NSManagedObjectContext MR_runOnMainQueueWithoutDeadlocking:completion];
+            // If we are not the default context (And therefore need to save the root context, do the completion action if one was specified
+            if (completion)
+            {
+                dispatch_async(dispatch_get_main_queue(), completion);
+            }
         }
     }];
 }
-
-- (void) MR_unrelatedSaveInBackgroundErrorHandler:(void (^)(NSError *))errorCallback completion:(void (^)(void))completion;
-{
-    [self performBlock:^{
-        [self MR_saveWithErrorCallback:errorCallback];
-        
-        if (completion)
-        {
-            dispatch_async(dispatch_get_main_queue(), completion);
-        }
-    }];
-}
-
 
 @end
