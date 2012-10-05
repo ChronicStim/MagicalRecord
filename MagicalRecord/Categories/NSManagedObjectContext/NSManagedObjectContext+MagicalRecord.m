@@ -161,19 +161,4 @@ static NSManagedObjectContext *defaultManagedObjectContext_ = nil;
     return context;
 }
 
-- (void) MR_setContextWorkingName:(NSString *)workingName;
-{
-    [[self userInfo] setObject:workingName forKey:kNSManagedObjectContextWorkingName];
-}
-
-- (NSString *) MR_contextWorkingName;
-{
-    NSString *workingName = [[self userInfo] objectForKey:kNSManagedObjectContextWorkingName];
-    if (nil == workingName) {
-        workingName = @"UndefinedWorkingContext";
-    }
-    return workingName;
-}
-
-
 @end

@@ -65,11 +65,6 @@ void reset_action_queue(void)
  
 }
 
-+ (void) saveInBackgroundUsingUnrelatedContext:(NSManagedObjectContext *)localContext block:(void (^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion errorHandler:(void(^)(NSError *))errorHandler;
-{
-    [self saveInBackgroundUsingContext:localContext block:block completion:completion errorHandler:errorHandler];
-}
-
 + (void) saveInBackgroundWithBlock:(void (^)(NSManagedObjectContext *))block completion:(void (^)(void))completion errorHandler:(void (^)(NSError *))errorHandler;
 {
     NSManagedObjectContext *savingContext = [[MagicalRecord persistenceStrategy] contextToUseForBackgroundSaves];
@@ -83,13 +78,6 @@ void reset_action_queue(void)
     [self saveInBackgroundUsingContext:localContext block:block completion:completion errorHandler:errorHandler];
 }
                                     
-+ (void) saveInBackgroundUsingChildOfParentContext:(NSManagedObjectContext *)parentContext WithBlock:(void (^)(NSManagedObjectContext *))block completion:(void (^)(void))completion errorHandler:(void (^)(NSError *))errorHandler;
-{
-    NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextWithParent:parentContext];
-    
-    [self saveInBackgroundUsingContext:localContext block:block completion:completion errorHandler:errorHandler];
-}
-
 + (void) saveWithBlock:(void (^)(NSManagedObjectContext *localContext))block completion:(void (^)(void))completion errorHandler:(void (^)(NSError *))errorHandler;
 {
     NSManagedObjectContext *mainContext  = [NSManagedObjectContext MR_defaultContext];

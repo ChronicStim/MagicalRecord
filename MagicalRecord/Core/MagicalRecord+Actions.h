@@ -25,8 +25,6 @@
  */
 + (void) saveInBackgroundUsingCurrentContextWithBlock:(void (^)(NSManagedObjectContext *))block completion:(void (^)(void))completion errorHandler:(void (^)(NSError *))errorHandler;
 
-+ (void) saveInBackgroundUsingChildOfParentContext:(NSManagedObjectContext *)parentContext WithBlock:(void (^)(NSManagedObjectContext *))block completion:(void (^)(void))completion errorHandler:(void (^)(NSError *))errorHandler;
-
-+ (void) saveInBackgroundUsingUnrelatedContext:(NSManagedObjectContext *)localContext block:(void (^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion errorHandler:(void(^)(NSError *))errorHandler;
++ (void) saveInBackgroundUsingContext:(NSManagedObjectContext *)localContext block:(void (^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion errorHandler:(void(^)(NSError *))errorHandler;
 
 @end

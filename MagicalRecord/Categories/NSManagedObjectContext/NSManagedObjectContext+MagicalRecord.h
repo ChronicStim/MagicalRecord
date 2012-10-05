@@ -25,7 +25,4 @@ extern NSString * const kMagicalRecordDidMergeChangesFromiCloudNotification;
 
 - (NSString *) MR_description;
 
-- (void) MR_setContextWorkingName:(NSString *)workingName;
-- (NSString *) MR_contextWorkingName;
-
 @end
