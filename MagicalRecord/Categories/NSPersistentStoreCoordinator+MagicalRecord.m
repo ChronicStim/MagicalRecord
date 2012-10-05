@@ -6,7 +6,6 @@
 //
 
 #import "CoreData+MagicalRecord.h"
-#import "NSPersistentStoreCoordinator+CPTDualStore.h"
 
 static NSPersistentStoreCoordinator *defaultCoordinator_ = nil;
 NSString * const kMagicalRecordPSCDidCompleteiCloudSetupNotification = @"kMagicalRecordPSCDidCompleteiCloudSetupNotification";
@@ -29,8 +28,7 @@ NSString * const kMagicalRecordPSCDidCompleteiCloudSetupNotification = @"kMagica
 {
     if (defaultCoordinator_ == nil && [MagicalRecord shouldAutoCreateDefaultPersistentStoreCoordinator])
     {
-//        [self MR_setDefaultStoreCoordinator:[self MR_newPersistentStoreCoordinator]];
-        [self MR_setDefaultStoreCoordinator:[NSPersistentStoreCoordinator defaultCoordinator]];
+        [self MR_setDefaultStoreCoordinator:[self MR_newPersistentStoreCoordinator]];
     }
 	return defaultCoordinator_;
 }
@@ -121,10 +119,14 @@ NSString * const kMagicalRecordPSCDidCompleteiCloudSetupNotification = @"kMagica
 
 + (NSDictionary *) MR_autoMigrationOptions;
 {
+    // Adding the journalling mode recommended by apple
+    NSMutableDictionary *sqliteOptions = [NSMutableDictionary dictionary];
+    [sqliteOptions setObject:@"WAL" forKey:@"journal_mode"];
+    
     NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
                              [NSNumber numberWithBool:YES], NSMigratePersistentStoresAutomaticallyOption,
                              [NSNumber numberWithBool:YES], NSInferMappingModelAutomaticallyOption,
-                             @{@"journal_mode" :@"WAL"}, NSSQLitePragmasOption,
+                             sqliteOptions, NSSQLitePragmasOption,
                              nil];
     return options;
 }
