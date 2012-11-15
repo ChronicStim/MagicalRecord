@@ -23,6 +23,7 @@
 + (BOOL) MR_hasAtLeastOneEntity;
 + (BOOL) MR_hasAtLeastOneEntityInContext:(NSManagedObjectContext *)context;
 
++ (NSNumber *) MR_aggregateOperation:(NSString *)function onAttribute:(NSString *)attributeName withPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context withAttributeType:(NSAttributeType)attributeType;
 + (NSNumber *)MR_aggregateOperation:(NSString *)function onAttribute:(NSString *)attributeName withPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context;
 + (NSNumber *)MR_aggregateOperation:(NSString *)function onAttribute:(NSString *)attributeName withPredicate:(NSPredicate *)predicate;
 

@@ -105,7 +105,7 @@
 	return [self MR_objectWithMinValueFor:property inContext:[self  managedObjectContext]];
 }
 
-+ (NSNumber *) MR_aggregateOperation:(NSString *)function onAttribute:(NSString *)attributeName withPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context 
++ (NSNumber *) MR_aggregateOperation:(NSString *)function onAttribute:(NSString *)attributeName withPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context withAttributeType:(NSAttributeType)attributeType;
 {
     NSExpression *ex = [NSExpression expressionForFunction:function 
                                                  arguments:[NSArray arrayWithObject:[NSExpression expressionForKeyPath:attributeName]]];
@@ -116,7 +116,11 @@
     
     // determine the type of attribute, required to set the expression return type    
     NSAttributeDescription *attributeDescription = [[[self MR_entityDescription] attributesByName] objectForKey:attributeName];
-    [ed setExpressionResultType:[attributeDescription attributeType]];    
+    if (NSUndefinedAttributeType == attributeType) {
+        [ed setExpressionResultType:[attributeDescription attributeType]];
+    } else {
+        [ed setExpressionResultType:attributeType];
+    }
     NSArray *properties = [NSArray arrayWithObject:ed];
     
     NSFetchRequest *request = [self MR_requestAllWithPredicate:predicate inContext:context];
@@ -127,6 +131,11 @@
     NSNumber *resultValue = [resultsDictionary objectForKey:@"result"];
     
     return resultValue;    
+}
+
++ (NSNumber *) MR_aggregateOperation:(NSString *)function onAttribute:(NSString *)attributeName withPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context;
+{
+    return [self MR_aggregateOperation:function onAttribute:attributeName withPredicate:predicate inContext:context withAttributeType:NSUndefinedAttributeType];
 }
 
 + (NSNumber *) MR_aggregateOperation:(NSString *)function onAttribute:(NSString *)attributeName withPredicate:(NSPredicate *)predicate 
