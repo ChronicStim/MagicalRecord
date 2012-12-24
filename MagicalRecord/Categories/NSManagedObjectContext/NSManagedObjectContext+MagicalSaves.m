@@ -88,20 +88,7 @@
 
 - (void) MR_save;
 {
-    [self MR_saveErrorHandler:nil];
-}
-
-- (void) MR_saveErrorHandler:(void (^)(NSError *))errorCallback;
-{
-    [self performBlockAndWait:^{
-        [self MR_saveWithErrorCallback:errorCallback];
-    }];
-    
-    if (self == [[self class] MR_defaultContext])
-    {
-        // Since this is a synchronous call, I made the background context save synchronous as well to reflect the intent.
-        [[[self class] MR_rootSavingContext] MR_saveErrorHandler:errorCallback];
-    }
+    [self MR_saveWithErrorCallback:nil];
 }
 
 - (void) MR_saveInBackgroundCompletion:(void (^)(void))completion;
