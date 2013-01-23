@@ -10,7 +10,6 @@
 #import "NSManagedObject+MagicalRecord.h"
 #import "NSPersistentStoreCoordinator+MagicalRecord.h"
 #import "NSManagedObjectContext+MagicalRecord.h"
-#import "MagicalRecordPersistenceStrategy.h"
 
 @implementation MagicalRecord (Setup)
 

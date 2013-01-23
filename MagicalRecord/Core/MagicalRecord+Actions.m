@@ -130,6 +130,28 @@
     }];
 }
 
++ (void) saveInBackgroundUsingContext:(NSManagedObjectContext *)localContext block:(void (^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion errorHandler:(void(^)(NSError *))errorHandler;
+{
+    [localContext performBlock:^{
+        if (block) {
+            block(localContext);
+        }
+        
+        [localContext MR_saveToPersistentStoreWithCompletion:^(BOOL success, NSError *error) {
+            if (success) {
+                if (completion) {
+                    completion();
+                }
+            }
+            else {
+                if (errorHandler) {
+                    errorHandler(error);
+                }
+            }
+        }];
+    }];
+}
+
 #pragma clang diagnostic pop // ignored "-Wdeprecated-implementations"
 
 @end
