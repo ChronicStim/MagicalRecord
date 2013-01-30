@@ -20,6 +20,42 @@
 
 static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
 
++(NSString *)primaryDiaryStorePath;
+{
+    static NSString *storeFilename = kPSCStoreFilenameDiary;
+    NSString *appDocumentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if ( ![fileManager fileExistsAtPath:appDocumentsDirectory isDirectory:NULL] ) {
+        NSError *error = nil;
+        if (![fileManager createDirectoryAtPath:appDocumentsDirectory withIntermediateDirectories:NO attributes:nil error:&error]) {
+            DDLogError(@"Failed to create application directory: %@ Error: %@", appDocumentsDirectory,[error userInfo]);
+            return nil;
+        }
+    }
+
+    NSString *storePath = [appDocumentsDirectory stringByAppendingPathComponent: storeFilename];
+    return storePath;
+}
+
++(NSString *)reportDataStorePath;
+{
+    static NSString *storeFilename = kPSCStoreFilenameReports;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cacheDirectory = [paths objectAtIndex:0];
+    NSString *cacheFolderPath = [cacheDirectory stringByAppendingPathComponent:DEFAULT_CACHE_FOLDER_NAME];
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if ( ![fileManager fileExistsAtPath:cacheFolderPath isDirectory:NULL] ) {
+        NSError *error = nil;
+        if (![fileManager createDirectoryAtPath:cacheFolderPath withIntermediateDirectories:YES attributes:nil error:&error]) {
+            DDLogError(@"Failed to create report data cache directory: %@ Error: %@", cacheFolderPath,[error userInfo]);
+            return nil;
+        }
+    }
+    NSString *storePath = [cacheFolderPath stringByAppendingPathComponent: storeFilename];
+    return storePath;
+}
+
 +(NSPersistentStoreCoordinator*)defaultCoordinator;
 {
     if (_persistentStoreCoordinator == nil) {

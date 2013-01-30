@@ -11,5 +11,7 @@
 @interface NSPersistentStoreCoordinator (CPTDualStore)
 
 +(NSPersistentStoreCoordinator*)defaultCoordinator;
++(NSString *)primaryDiaryStorePath;
++(NSString *)reportDataStorePath;
 
 @end
