@@ -13,5 +13,7 @@
 +(NSPersistentStoreCoordinator*)defaultCoordinator;
 +(NSString *)primaryDiaryStorePath;
 +(NSString *)reportDataStorePath;
+-(void)addCPTStores;
+-(void)removeCPTStores;
 
 @end

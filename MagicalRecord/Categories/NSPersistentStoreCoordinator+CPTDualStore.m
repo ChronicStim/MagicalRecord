@@ -60,14 +60,6 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
 {
     if (_persistentStoreCoordinator == nil) {
         
-    	static NSString *storeFilename = kPSCStoreFilenameDiary;
-        static NSString *storeFilenameReportData = kPSCStoreFilenameReports;
-        
-        NSArray *storeArray = [NSArray arrayWithObjects:storeFilename,storeFilenameReportData, nil];
-        
-        DDLogInfo(@"Active database for newPSC = %@",storeFilename);
-        DDLogInfo(@"Active database for newPSC = %@",storeFilenameReportData);
-        
         NSManagedObjectModel *mom = [NSManagedObjectModel MR_defaultManagedObjectModel];
         if (!mom) {
             //NSAssert(NO, @"NSManagedObjectModel is nil");
@@ -75,139 +67,138 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
             return nil;
         }
         
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        NSString *appDocumentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
-        if ( ![fileManager fileExistsAtPath:appDocumentsDirectory isDirectory:NULL] ) {
-            if (![fileManager createDirectoryAtPath:appDocumentsDirectory withIntermediateDirectories:NO attributes:nil error:nil]) {
-                //NSAssert(NO, ([NSString stringWithFormat:@"Failed to create App Support directory %@", appDocumentsDirectory]));
-                DDLogError(@"Failed to create application directory: %@", appDocumentsDirectory);
-                return nil;
-            }
-        }
-        
         _persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:mom];
         
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-        NSString *cacheDirectory = [paths objectAtIndex:0];
-        NSString *cacheFolderPath = [cacheDirectory stringByAppendingPathComponent:DEFAULT_CACHE_FOLDER_NAME];
+    }
+    
+    NSArray *currentStores = [_persistentStoreCoordinator persistentStores];
+    if ([currentStores count] == 0) {
+        [_persistentStoreCoordinator addCPTStores];
+    }
+    
+    return _persistentStoreCoordinator;
+}
+
+-(void)addCPTStores;
+{
+    static NSString *storeFilename = kPSCStoreFilenameDiary;
+    static NSString *storeFilenameReportData = kPSCStoreFilenameReports;
+    
+    NSArray *storeArray = [NSArray arrayWithObjects:storeFilename,storeFilenameReportData, nil];
+    
+    DDLogInfo(@"Active database for newPSC = %@",storeFilename);
+    DDLogInfo(@"Active database for newPSC = %@",storeFilenameReportData);
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+
+    for (NSString *filename in storeArray) {
         
-        BOOL isDirectory = NO;
-        BOOL folderExists = [fileManager fileExistsAtPath:cacheFolderPath isDirectory:&isDirectory] && isDirectory;
+        NSString *configuration;
+        NSString *storePath;
+        if ([filename isEqualToString:kPSCStoreFilenameDiary]) {
+            configuration = kPSCConfigurationDiary;
+            storePath = [NSPersistentStoreCoordinator primaryDiaryStorePath];
+        } else if ([filename isEqualToString:kPSCStoreFilenameReports]) {
+            configuration = kPSCConfigurationReports;
+            storePath = [NSPersistentStoreCoordinator reportDataStorePath];
+        } else {
+            configuration = nil;
+            storePath = nil;
+        }
+        NSURL *storeUrl = [NSURL fileURLWithPath: storePath];
         
-        if (!folderExists)
-        {
-            NSError *error = nil;
-            [fileManager createDirectoryAtPath:cacheFolderPath withIntermediateDirectories:YES attributes:nil error:&error];
+        // Check if a previously failed migration has left a *.new store in the filesystem. If it has, then remove it before the next migration.
+        NSString *storePathNew = [storePath stringByAppendingPathExtension:@"new"];
+        if ([fileManager fileExistsAtPath:storePathNew]) {
+            NSError *errorNewRemoval = nil;
+            if (![fileManager removeItemAtPath:storePathNew error:&errorNewRemoval]) {
+                DDLogError(@"Removal of %@.new file was not successful",filename);
+            }
         }
         
-        for (NSString *filename in storeArray) {
+        // Need to see if the database files exist or not
+        BOOL databaseFileExists = [fileManager fileExistsAtPath:storePath];
+        if (databaseFileExists) {
+            // If file exists, compatibility needs to be checked.
+            NSString *sourceStoreType = NSSQLiteStoreType;
+            NSError *errorCompatibility = nil;
+            NSDictionary *sourceMetadata = [NSPersistentStoreCoordinator metadataForPersistentStoreOfType:sourceStoreType URL:storeUrl error:&errorCompatibility];
             
-            NSString *configuration;
-            NSString *storePath;
-            if ([filename isEqualToString:kPSCStoreFilenameDiary]) {
-                configuration = kPSCConfigurationDiary;
-                storePath = [appDocumentsDirectory stringByAppendingPathComponent: filename];
-            } else if ([filename isEqualToString:kPSCStoreFilenameReports]) {
-                configuration = kPSCConfigurationReports;
-                storePath = [cacheFolderPath stringByAppendingPathComponent: filename];
-            } else {
-                configuration = nil;
-                storePath = nil;
-            }
-            NSURL *storeUrl = [NSURL fileURLWithPath: storePath];
-            
-            // Check if a previously failed migration has left a *.new store in the filesystem. If it has, then remove it before the next migration.
-            NSString *storePathNew = [storePath stringByAppendingPathExtension:@"new"];
-            if ([fileManager fileExistsAtPath:storePathNew]) {
-                NSError *errorNewRemoval = nil;
-                if (![fileManager removeItemAtPath:storePathNew error:&errorNewRemoval]) {
-                    DDLogError(@"Removal of %@.new file was not successful",filename);
-                }
+            if (sourceMetadata == nil) {
+                // deal with error
+                DDLogError(@"Could not retrieve metadata from the store: %@ with Error: %@",storeFilename,[errorCompatibility userInfo]);
             }
             
-            // Need to see if the database files exist or not
-            BOOL databaseFileExists = [fileManager fileExistsAtPath:storePath];
-            if (databaseFileExists) {
-                // If file exists, compatibility needs to be checked.
-                NSString *sourceStoreType = NSSQLiteStoreType;
-                NSError *errorCompatibility = nil;
-                NSDictionary *sourceMetadata = [NSPersistentStoreCoordinator metadataForPersistentStoreOfType:sourceStoreType URL:storeUrl error:&errorCompatibility];
+            NSManagedObjectModel *destinationModel = [self managedObjectModel];
+            BOOL pscCompatibile = [destinationModel isConfiguration:configuration compatibleWithStoreMetadata:sourceMetadata];
+            
+            // If not compatible, then need to try to migrate using the workaround process.
+            BOOL migrationWorkaroundHasBeenRun = NO;
+            if (!pscCompatibile) {
                 
-                if (sourceMetadata == nil) {
-                    // deal with error
-                    DDLogError(@"Could not retrieve metadata from the store: %@ with Error: %@",storeFilename,[errorCompatibility userInfo]);
-                }
-                
-                NSManagedObjectModel *destinationModel = [_persistentStoreCoordinator managedObjectModel];
-                BOOL pscCompatibile = [destinationModel isConfiguration:configuration compatibleWithStoreMetadata:sourceMetadata];
-                
-                // If not compatible, then need to try to migrate using the workaround process.
-                BOOL migrationWorkaroundHasBeenRun = NO;
-                //BOOL migrationWorkaroundSucceeded = NO;
-                if (!pscCompatibile) {
+                while (!migrationWorkaroundHasBeenRun) {
                     
-                    while (!migrationWorkaroundHasBeenRun) {
-                        
-                        NSString *dummyPSCString = @"dummyPSC";
-                        
-                        NSString *lastVersionRun;
-                        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-                        if ([defaults objectForKey:kPrefLastVersionRunKey]) {
-                            lastVersionRun = [defaults objectForKey:kPrefLastVersionRunKey];
-                        } else {
-                            lastVersionRun = @"";
-                        }
-                        
-                        NSString *versionString;
-                        NSString *ver = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-                        versionString = [NSString stringWithFormat:@"v%@",ver];
-                        
-                        NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Running workaround.",lastVersionRun,versionString,filename];
-                        DDLogInfo(@"Running migration workaround to try and bypass incompatibility. %@",message);
-                        
-                        DDLogInfo(@"Active database for %@ = %@",dummyPSCString,filename);
-                        
-                        NSString *configuration = nil;
-                        NSString *storePath;
-                        if ([filename isEqualToString:kPSCStoreFilenameDiary]) {
-                            storePath = [appDocumentsDirectory stringByAppendingPathComponent: filename];
-                        } else if ([filename isEqualToString:kPSCStoreFilenameReports]) {
-                            storePath = [cacheFolderPath stringByAppendingPathComponent: filename];
-                        } else {
-                            configuration = nil;
-                            storePath = nil;
-                        }
-                        
-                        NSURL *storeUrl = [NSURL fileURLWithPath: storePath];
-                        NSPersistentStoreCoordinator *dummyPSC = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:mom];
-                        NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,nil];
-                        NSError *error = nil;
-                        if (![dummyPSC addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeUrl options:options error:&error]) {
-                            DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
-                            // migrationWorkaroundSucceeded = NO;
-                            NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Failed workaround.",lastVersionRun,versionString,filename];
-                            DDLogError(@"Failed to resolve migration issue. %@",message);
-                        } else {
-                            //migrationWorkaroundSucceeded = YES;
-                            NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Migration workaround succeeded.",lastVersionRun,versionString,filename];
-                            DDLogInfo(@"Migration issue resolved. %@",message);
-                        }                        
-                        dummyPSC=nil;
-                        migrationWorkaroundHasBeenRun = YES;
-                    }                    
+                    NSString *dummyPSCString = @"dummyPSC";
+                    
+                    NSString *lastVersionRun;
+                    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                    if ([defaults objectForKey:kPrefLastVersionRunKey]) {
+                        lastVersionRun = [defaults objectForKey:kPrefLastVersionRunKey];
+                    } else {
+                        lastVersionRun = @"";
+                    }
+                    
+                    NSString *versionString;
+                    NSString *ver = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+                    versionString = [NSString stringWithFormat:@"v%@",ver];
+                    
+                    NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Running workaround.",lastVersionRun,versionString,filename];
+                    DDLogInfo(@"Running migration workaround to try and bypass incompatibility. %@",message);
+                    
+                    DDLogInfo(@"Active database for %@ = %@",dummyPSCString,filename);
+                                        
+                    NSURL *storeUrl = [NSURL fileURLWithPath: storePath];
+                    NSPersistentStoreCoordinator *dummyPSC = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:destinationModel];
+                    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,nil];
+                    NSError *error = nil;
+                    if (![dummyPSC addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeUrl options:options error:&error]) {
+                        DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
+                        NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Failed workaround.",lastVersionRun,versionString,filename];
+                        DDLogError(@"Failed to resolve migration issue. %@",message);
+                    } else {
+                        NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Migration workaround succeeded.",lastVersionRun,versionString,filename];
+                        DDLogInfo(@"Migration issue resolved. %@",message);
+                    }
+                    dummyPSC=nil;
+                    migrationWorkaroundHasBeenRun = YES;
                 }
             }
-            
-            // Proceed with store assignment
-            NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,nil];
-            NSError *error = nil;
-            if (![_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:configuration URL:storeUrl options:options error:&error]) {
-                DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
-                _persistentStoreCoordinator = nil;
-            }  
+        }
+        
+        // Proceed with store assignment
+        NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,nil];
+        NSError *error = nil;
+        if (![self addPersistentStoreWithType:NSSQLiteStoreType configuration:configuration URL:storeUrl options:options error:&error]) {
+            DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
+        } else {
+            DDLogInfo(@"Added PersistentStore at URL: %@",storeUrl);
         }
     }
-    return _persistentStoreCoordinator;
+}
+
+-(void)removeCPTStores;
+{
+    NSArray *storeArray = [NSArray arrayWithObjects:[NSURL fileURLWithPath:[NSPersistentStoreCoordinator primaryDiaryStorePath]],[NSURL fileURLWithPath:[NSPersistentStoreCoordinator reportDataStorePath]], nil];
+   
+    for (NSURL *storeURL in storeArray) {
+        NSPersistentStore *store = [self persistentStoreForURL:storeURL];
+        NSError *error = nil;
+        if (![self removePersistentStore:store  error:&error]) {
+            DDLogError(@"Error removing store at URL: %@  Error: %@",storeURL,[error userInfo]);
+        } else {
+            DDLogInfo(@"PersistentStore has been removed from Coordinator; URL = %@",storeURL);
+        }
+    }
 }
 
 @end
