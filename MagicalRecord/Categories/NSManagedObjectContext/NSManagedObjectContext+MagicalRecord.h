@@ -6,6 +6,7 @@
 //
 
 #import "MagicalRecord.h"
+#import "TICoreDataSync.h"
 
 extern NSString * const kMagicalRecordDidMergeChangesFromiCloudNotification;
 

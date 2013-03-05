@@ -8,6 +8,7 @@
 //#import "NSManagedObjectModel+MagicalRecord.h"
 #import "CoreData+MagicalRecord.h"
 
+#define kChronicPainTrackerMOMFilename @"ChronicPainTracker.momd"
 
 static NSManagedObjectModel *defaultManagedObjectModel_ = nil;
 
@@ -17,7 +18,8 @@ static NSManagedObjectModel *defaultManagedObjectModel_ = nil;
 {
 	if (defaultManagedObjectModel_ == nil && [MagicalRecord shouldAutoCreateManagedObjectModel])
 	{
-        [self MR_setDefaultManagedObjectModel:[self MR_mergedObjectModelFromMainBundle]];
+//        [self MR_setDefaultManagedObjectModel:[self MR_mergedObjectModelFromMainBundle]];
+        [self MR_setDefaultManagedObjectModel:[self MR_managedObjectModelNamed:kChronicPainTrackerMOMFilename]];
 	}
 	return defaultManagedObjectModel_;
 }
@@ -49,7 +51,7 @@ static NSManagedObjectModel *defaultManagedObjectModel_ = nil;
 	NSString *path = [[NSBundle mainBundle] pathForResource:[modelFileName stringByDeletingPathExtension] 
                                                      ofType:[modelFileName pathExtension]];
 	NSURL *momURL = [NSURL fileURLWithPath:path];
-	
+	DDLogInfo(@"Loading MOM with path: %@",path);
 	NSManagedObjectModel *model = [[NSManagedObjectModel alloc] initWithContentsOfURL:momURL];
 	return model;
 }
