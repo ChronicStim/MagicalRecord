@@ -115,7 +115,7 @@ static NSString * const kMagicalRecordNSManagedObjectContextWorkingName = @"kNSM
     }
     
     rootSavingContext = context;
-//    [context MR_obtainPermanentIDsBeforeSaving];
+    [context MR_obtainPermanentIDsBeforeSaving];
     [rootSavingContext setMergePolicy:NSMergeByPropertyObjectTrumpMergePolicy];
     [rootSavingContext MR_setWorkingName:@"BACKGROUND SAVING (ROOT)"];
     MRLog(@"Set Root Saving Context: %@", rootSavingContext);

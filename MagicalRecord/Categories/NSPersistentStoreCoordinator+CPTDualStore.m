@@ -178,10 +178,13 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
         // Proceed with store assignment
         NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,nil];
         NSError *error = nil;
-        if (![self addPersistentStoreWithType:NSSQLiteStoreType configuration:configuration URL:storeUrl options:options error:&error]) {
-            DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
-        } else {
-            DDLogInfo(@"Added PersistentStore at URL: %@",storeUrl);
+        // Check if a store at the url has already been assigned to the controller
+        if (![self persistentStoreForURL:storeUrl]) {
+            if (![self addPersistentStoreWithType:NSSQLiteStoreType configuration:configuration URL:storeUrl options:options error:&error]) {
+                DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
+            } else {
+                DDLogInfo(@"Added PersistentStore at URL: %@",storeUrl);
+            }
         }
     }
 }
