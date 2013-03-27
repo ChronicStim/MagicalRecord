@@ -14,7 +14,7 @@
 #define kPSCStoreFilenameReports @"CPT_ReportData.sqlite"
 #define kPSCConfigurationDiary @"DiaryModel"
 #define kPSCConfigurationReports @"DiaryReportsModel"
-#define kPrefLastVersionRunKey @"prefLastVersionRun"
+#define kPrefLastVersionRunKey @"!prefLastVersionRun"
 
 @implementation NSPersistentStoreCoordinator (CPTDualStore)
 
