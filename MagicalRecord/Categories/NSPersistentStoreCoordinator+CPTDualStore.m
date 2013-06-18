@@ -7,14 +7,7 @@
 //
 
 #import "NSPersistentStoreCoordinator+CPTDualStore.h"
-
-#define DEFAULT_CACHE_FOLDER_NAME @"CPT_RptDatabase_Cache"
-
-#define kPSCStoreFilenameDiary @"CPT_PrimaryDiary.sqlite"
-#define kPSCStoreFilenameReports @"CPT_ReportData.sqlite"
-#define kPSCConfigurationDiary @"DiaryModel"
-#define kPSCConfigurationReports @"DiaryReportsModel"
-#define kPrefLastVersionRunKey @"!prefLastVersionRun"
+#import "GlobalDefaults.h"
 
 @implementation NSPersistentStoreCoordinator (CPTDualStore)
 
@@ -22,7 +15,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
 
 +(NSString *)primaryDiaryStorePath;
 {
-    static NSString *storeFilename = kPSCStoreFilenameDiary;
+    NSString *storeFilename = kPSCStoreFilenameDiary;
     NSString *appDocumentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if ( ![fileManager fileExistsAtPath:appDocumentsDirectory isDirectory:NULL] ) {
@@ -39,7 +32,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
 
 +(NSString *)reportDataStorePath;
 {
-    static NSString *storeFilename = kPSCStoreFilenameReports;
+    NSString *storeFilename = kPSCStoreFilenameReports;
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cacheDirectory = [paths objectAtIndex:0];
     NSString *cacheFolderPath = [cacheDirectory stringByAppendingPathComponent:DEFAULT_CACHE_FOLDER_NAME];
@@ -81,8 +74,8 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
 
 -(void)addCPTStores;
 {
-    static NSString *storeFilename = kPSCStoreFilenameDiary;
-    static NSString *storeFilenameReportData = kPSCStoreFilenameReports;
+    NSString *storeFilename = kPSCStoreFilenameDiary;
+    NSString *storeFilenameReportData = kPSCStoreFilenameReports;
     
     NSArray *storeArray = [NSArray arrayWithObjects:storeFilename,storeFilenameReportData, nil];
     
