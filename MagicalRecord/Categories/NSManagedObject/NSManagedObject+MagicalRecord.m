@@ -91,6 +91,9 @@ static NSUInteger defaultBatchSize = kMagicalRecordDefaultBatchSize;
     else
     {
         NSString *entityName = [self MR_entityName];
+        if (nil == context) {
+            context = [NSManagedObjectContext MR_contextForCurrentThread];
+        }
         return [NSEntityDescription entityForName:entityName inManagedObjectContext:context];
     }
 }
