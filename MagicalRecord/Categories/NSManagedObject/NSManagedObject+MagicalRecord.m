@@ -83,9 +83,10 @@ static NSUInteger defaultBatchSize = kMagicalRecordDefaultBatchSize;
 
 + (NSEntityDescription *) MR_entityDescriptionInContext:(NSManagedObjectContext *)context
 {
-    if ([self respondsToSelector:@selector(entityInManagedObjectContext:)]) 
+    SEL selector = NSSelectorFromString(@"entityInManagedObjectContext:");
+    if ([self respondsToSelector:selector])
     {
-        NSEntityDescription *entity = [self performSelector:@selector(entityInManagedObjectContext:) withObject:context];
+        NSEntityDescription *entity = [self performSelector:selector withObject:context];
         return entity;
     }
     else
@@ -155,9 +156,10 @@ static NSUInteger defaultBatchSize = kMagicalRecordDefaultBatchSize;
 
 + (id) MR_createInContext:(NSManagedObjectContext *)context
 {
-    if ([self respondsToSelector:@selector(insertInManagedObjectContext:)]) 
+    SEL selector = NSSelectorFromString(@"insertInManagedObjectContext:");
+    if ([self respondsToSelector:selector])
     {
-        id entity = [self performSelector:@selector(insertInManagedObjectContext:) withObject:context];
+        id entity = [self performSelector:selector withObject:context];
         return entity;
     }
     else

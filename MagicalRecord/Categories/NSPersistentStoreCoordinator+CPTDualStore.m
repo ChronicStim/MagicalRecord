@@ -152,7 +152,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
                                         
                     NSURL *storeUrl = [NSURL fileURLWithPath: storePath];
                     NSPersistentStoreCoordinator *dummyPSC = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:destinationModel];
-                    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,nil];
+                    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,@{@"journal_mode":@"DELETE"},NSSQLitePragmasOption,nil];
                     NSError *error = nil;
                     if (![dummyPSC addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeUrl options:options error:&error]) {
                         DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
@@ -169,7 +169,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
         }
         
         // Proceed with store assignment
-        NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,nil];
+        NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,@{@"journal_mode":@"DELETE"},NSSQLitePragmasOption,nil];
         NSError *error = nil;
         // Check if a store at the url has already been assigned to the controller
         if (![self persistentStoreForURL:storeUrl]) {
