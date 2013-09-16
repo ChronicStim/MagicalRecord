@@ -86,7 +86,10 @@ static NSUInteger defaultBatchSize = kMagicalRecordDefaultBatchSize;
     SEL selector = NSSelectorFromString(@"entityInManagedObjectContext:");
     if ([self respondsToSelector:selector])
     {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
         NSEntityDescription *entity = [self performSelector:selector withObject:context];
+#pragma clang diagnostic pop
         return entity;
     }
     else
@@ -159,7 +162,10 @@ static NSUInteger defaultBatchSize = kMagicalRecordDefaultBatchSize;
     SEL selector = NSSelectorFromString(@"insertInManagedObjectContext:");
     if ([self respondsToSelector:selector])
     {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
         id entity = [self performSelector:selector withObject:context];
+#pragma clang diagnostic pop
         return entity;
     }
     else
