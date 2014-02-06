@@ -8,6 +8,10 @@
 
 #import <CoreData/CoreData.h>
 
+extern NSString * const kMagicalRecordPSCWillBeginDBMigrationNotification;
+extern NSString * const kMagicalRecordPSCDidCompleteDBMigrationNotification;
+extern NSString * const kMagicalRecordPSCDidFailDBMigrationNotification;
+
 @interface NSPersistentStoreCoordinator (CPTDualStore)
 
 +(NSPersistentStoreCoordinator*)defaultCoordinator;

@@ -9,6 +9,10 @@
 #import "NSPersistentStoreCoordinator+CPTDualStore.h"
 #import "GlobalDefaults.h"
 
+NSString * const kMagicalRecordPSCWillBeginDBMigrationNotification = @"kMagicalRecordPSCWillBeginDBMigrationNotification";
+NSString * const kMagicalRecordPSCDidCompleteDBMigrationNotification = @"kMagicalRecordPSCDidCompleteDBMigrationNotification";
+NSString * const kMagicalRecordPSCDidFailDBMigrationNotification = @"kMagicalRecordPSCDidFailDBMigrationNotification";
+
 @implementation NSPersistentStoreCoordinator (CPTDualStore)
 
 static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
@@ -129,6 +133,9 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
             BOOL migrationWorkaroundHasBeenRun = NO;
             if (!pscCompatibile) {
                 
+                NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+                [notificationCenter postNotificationName:kMagicalRecordPSCWillBeginDBMigrationNotification object:nil];
+
                 while (!migrationWorkaroundHasBeenRun) {
                     
                     NSString *dummyPSCString = @"dummyPSC";
@@ -158,9 +165,11 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
                         DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
                         NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Failed workaround.",lastVersionRun,versionString,filename];
                         DDLogError(@"Failed to resolve migration issue. %@",message);
+                        [notificationCenter postNotificationName:kMagicalRecordPSCDidFailDBMigrationNotification object:nil];
                     } else {
                         NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Migration workaround succeeded.",lastVersionRun,versionString,filename];
                         DDLogInfo(@"Migration issue resolved. %@",message);
+                        [notificationCenter postNotificationName:kMagicalRecordPSCDidCompleteDBMigrationNotification object:nil];
                     }
                     dummyPSC=nil;
                     migrationWorkaroundHasBeenRun = YES;
