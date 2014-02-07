@@ -130,53 +130,70 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
             BOOL pscCompatibile = [destinationModel isConfiguration:configuration compatibleWithStoreMetadata:sourceMetadata];
             
             // If not compatible, then need to try to migrate using the workaround process.
-            BOOL migrationWorkaroundHasBeenRun = NO;
             if (!pscCompatibile) {
                 
-                NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-                [notificationCenter postNotificationName:kMagicalRecordPSCWillBeginDBMigrationNotification object:nil];
-
-                while (!migrationWorkaroundHasBeenRun) {
-                    
-                    NSString *dummyPSCString = @"dummyPSC";
-                    
-                    NSString *lastVersionRun;
-                    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-                    if ([defaults objectForKey:kPrefLastVersionRunKey]) {
-                        lastVersionRun = [defaults objectForKey:kPrefLastVersionRunKey];
-                    } else {
-                        lastVersionRun = @"";
+                if ([filename isEqualToString:kPSCStoreFilenameReports]) {
+                    // Rather than migrate the reports db, just delete it since the data can be recreated later
+                    NSError *errorRemoveDB = nil;
+                    if (![fileManager removeItemAtPath:storePath error:&errorRemoveDB]) {
+                        DDLogError(@"Removal of %@.sqlite file was not successful",filename);
                     }
+                } else {
+                    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+                    [notificationCenter postNotificationName:kMagicalRecordPSCWillBeginDBMigrationNotification object:nil];
                     
-                    NSString *versionString;
-                    NSString *ver = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-                    versionString = [NSString stringWithFormat:@"v%@",ver];
-                    
-                    NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Running workaround.",lastVersionRun,versionString,filename];
-                    DDLogInfo(@"Running migration workaround to try and bypass incompatibility. %@",message);
-                    
-                    DDLogInfo(@"Active database for %@ = %@",dummyPSCString,filename);
-                                        
-                    NSURL *storeUrl = [NSURL fileURLWithPath: storePath];
-                    NSPersistentStoreCoordinator *dummyPSC = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:destinationModel];
-                    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,@{@"journal_mode":@"DELETE"},NSSQLitePragmasOption,nil];
-                    NSError *error = nil;
-                    if (![dummyPSC addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeUrl options:options error:&error]) {
-                        DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
-                        NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Failed workaround.",lastVersionRun,versionString,filename];
-                        DDLogError(@"Failed to resolve migration issue. %@",message);
-                        [notificationCenter postNotificationName:kMagicalRecordPSCDidFailDBMigrationNotification object:nil];
-                    } else {
-                        NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Migration workaround succeeded.",lastVersionRun,versionString,filename];
-                        DDLogInfo(@"Migration issue resolved. %@",message);
-                        [notificationCenter postNotificationName:kMagicalRecordPSCDidCompleteDBMigrationNotification object:nil];
+                    BOOL migrationWorkaroundHasBeenRun = NO;
+                    while (!migrationWorkaroundHasBeenRun) {
+                        
+                        NSString *dummyPSCString = @"dummyPSC";
+                        
+                        NSString *lastVersionRun;
+                        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                        if ([defaults objectForKey:kPrefLastVersionRunKey]) {
+                            lastVersionRun = [defaults objectForKey:kPrefLastVersionRunKey];
+                        } else {
+                            lastVersionRun = @"";
+                        }
+                        
+                        NSString *versionString;
+                        NSString *ver = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+                        versionString = [NSString stringWithFormat:@"v%@",ver];
+                        
+                        NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Running workaround.",lastVersionRun,versionString,filename];
+                        DDLogInfo(@"Running migration workaround to try and bypass incompatibility. %@",message);
+                        
+                        DDLogInfo(@"Active database for %@ = %@",dummyPSCString,filename);
+                        
+                        NSURL *storeUrl = [NSURL fileURLWithPath: storePath];
+                        NSPersistentStoreCoordinator *dummyPSC = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:destinationModel];
+                        NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,@{@"journal_mode":@"DELETE"},NSSQLitePragmasOption,nil];
+                        NSError *error = nil;
+                        if (![dummyPSC addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeUrl options:options error:&error]) {
+                            DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
+                            NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Failed workaround.",lastVersionRun,versionString,filename];
+                            DDLogError(@"Failed to resolve migration issue. %@",message);
+                            
+                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                                NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+                                [notificationCenter postNotificationName:kMagicalRecordPSCDidFailDBMigrationNotification object:nil];
+                            });
+                            
+                        } else {
+                            NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Migration workaround succeeded.",lastVersionRun,versionString,filename];
+                            DDLogInfo(@"Migration issue resolved. %@",message);
+                            
+                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                                NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+                                [notificationCenter postNotificationName:kMagicalRecordPSCDidCompleteDBMigrationNotification object:nil];
+                            });
+                            
+                        }
+                        dummyPSC=nil;
+                        migrationWorkaroundHasBeenRun = YES;
                     }
-                    dummyPSC=nil;
-                    migrationWorkaroundHasBeenRun = YES;
                 }
             }
         }
-        
         // Proceed with store assignment
         NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,@{@"journal_mode":@"DELETE"},NSSQLitePragmasOption,nil];
         NSError *error = nil;
