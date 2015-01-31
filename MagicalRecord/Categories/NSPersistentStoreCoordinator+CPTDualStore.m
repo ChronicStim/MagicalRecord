@@ -34,12 +34,26 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
     return storePath;
 }
 
++(NSString *)pathComponentToExternalStorage;
+{
+    NSString *storeName = kPSCPrimaryStoreFilename;
+    NSString *pathComponentToExternalStorage = [NSString stringWithFormat:@".%@_SUPPORT/_EXTERNAL_DATA/",storeName];
+    return pathComponentToExternalStorage;
+}
+
++(NSString *)primaryDiaryStoreExternalDataPath;
+{
+    NSString *appDocumentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+    NSString *pathToExternalStorage = [appDocumentsDirectory stringByAppendingPathComponent:[self pathComponentToExternalStorage]];
+    return pathToExternalStorage;
+}
+
 +(NSString *)reportDataStorePath;
 {
     NSString *storeFilename = kPSCStoreFilenameReports;
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cacheDirectory = [paths objectAtIndex:0];
-    NSString *cacheFolderPath = [cacheDirectory stringByAppendingPathComponent:DEFAULT_CACHE_FOLDER_NAME];
+    NSString *cacheFolderPath = [cacheDirectory stringByAppendingPathComponent:DEFAULT_RPTDB_CACHE_FOLDER_NAME];
     
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if ( ![fileManager fileExistsAtPath:cacheFolderPath isDirectory:NULL] ) {
@@ -214,11 +228,13 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
    
     for (NSURL *storeURL in storeArray) {
         NSPersistentStore *store = [self persistentStoreForURL:storeURL];
-        NSError *error = nil;
-        if (![self removePersistentStore:store  error:&error]) {
-            DDLogError(@"Error removing store at URL: %@  Error: %@",storeURL,[error userInfo]);
-        } else {
-            DDLogInfo(@"PersistentStore has been removed from Coordinator; URL = %@",storeURL);
+        if (store) {
+            NSError *error = nil;
+            if (![self removePersistentStore:store  error:&error]) {
+                DDLogError(@"Error removing store at URL: %@  Error: %@",storeURL,[error userInfo]);
+            } else {
+                DDLogInfo(@"PersistentStore has been removed from Coordinator; URL = %@",storeURL);
+            }
         }
     }
 }

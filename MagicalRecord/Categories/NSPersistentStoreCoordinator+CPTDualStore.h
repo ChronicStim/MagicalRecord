@@ -16,6 +16,8 @@ extern NSString * const kMagicalRecordPSCDidFailDBMigrationNotification;
 
 +(NSPersistentStoreCoordinator*)defaultCoordinator;
 +(NSString *)primaryDiaryStorePath;
++(NSString *)pathComponentToExternalStorage;
++(NSString *)primaryDiaryStoreExternalDataPath;
 +(NSString *)reportDataStorePath;
 -(void)addCPTStores;
 -(void)removeCPTStores;
