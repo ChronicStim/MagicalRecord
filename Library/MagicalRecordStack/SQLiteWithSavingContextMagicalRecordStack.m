@@ -32,17 +32,14 @@
     if (_savingContext == nil)
     {
         _savingContext = [NSManagedObjectContext MR_privateQueueContext];
-        [_savingContext performBlockAndWait:^{
-            [_savingContext setPersistentStoreCoordinator:[self coordinator]];
-        }];
+        [_savingContext setPersistentStoreCoordinator:[self coordinator]];
     }
 
     if (_context == nil)
     {
         _context = [NSManagedObjectContext MR_mainQueueContext];
-        [_context performBlockAndWait:^{
-            [_context setPersistentStoreCoordinator:[self coordinator]];
-        }];
+        [_context setPersistentStoreCoordinator:[self coordinator]];
+
         [_context MR_observeContextDidSave:_savingContext];
     }
 

@@ -132,10 +132,6 @@
 
         @try
         {
-#ifndef DEBUG
-            NSLog(@"→ Saving %@ [%@]", [self MR_description], optionsSummary);
-            NSLog(@"      Parent Chain: %@\n",[self MR_parentChain]);
-#endif
             saved = [self save:&error];
         }
         @catch(NSException *exception)
