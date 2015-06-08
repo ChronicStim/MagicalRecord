@@ -6,13 +6,13 @@
 //  Copyright 2011 Magical Panda Software LLC. All rights reserved.
 //
 
-#import "MagicalRecordDataImportTestCase.h"
+#import "MagicalDataImportTestCase.h"
 #import "SingleRelatedEntity.h"
 #import "AbstractRelatedEntity.h"
 #import "ConcreteRelatedEntity.h"
 #import "MappedEntity.h"
 
-@interface ImportSingleRelatedEntityTests : MagicalRecordDataImportTestCase
+@interface ImportSingleRelatedEntityTests : MagicalDataImportTestCase
 
 @property (nonatomic, retain) SingleRelatedEntity *singleTestEntity;
 
@@ -22,25 +22,38 @@
 
 @synthesize singleTestEntity = _singleTestEntity;
 
+- (void)setupTestData
+{
+    NSManagedObjectContext *context = [NSManagedObjectContext MR_defaultContext];
+
+    MappedEntity *testMappedEntity = [MappedEntity MR_createEntityInContext:context];
+
+    testMappedEntity.testMappedEntityID = @42;
+    testMappedEntity.sampleAttribute = @"This attribute created as part of the test case setup";
+
+    [context MR_saveToPersistentStoreAndWait];
+}
+
 - (void)setUp
 {
     [super setUp];
 
-    NSManagedObjectContext *stackContext = self.stack.context;
-
-    self.singleTestEntity = [SingleRelatedEntity MR_importFromObject:self.testEntityData inContext:stackContext];
-
-    expect(self.singleTestEntity).toNot.beNil();
+    self.singleTestEntity = [SingleRelatedEntity MR_importFromObject:self.testEntityData];
+    [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
 }
 
 - (void)testImportAnEntityRelatedToAbstractEntityViaToOneRelationshop
 {
-    AbstractRelatedEntity *relatedEntity = self.singleTestEntity.testAbstractToOneRelationship;
+    XCTAssertNotNil(self.singleTestEntity, @"singleTestEntity should not be nil");
 
-    expect(relatedEntity).toNot.beNil();
-    expect(relatedEntity).to.beKindOf([AbstractRelatedEntity class]);
-    expect(relatedEntity).to.respondTo(@selector(sampleBaseAttribute));
-    expect(relatedEntity.sampleBaseAttribute).to.contain(@"BASE");
+    id testRelatedEntity = self.singleTestEntity.testAbstractToOneRelationship;
+
+    XCTAssertNotNil(testRelatedEntity, @"testRelatedEntity should not be nil");
+
+    NSRange stringRange = [[testRelatedEntity sampleBaseAttribute] rangeOfString:@"BASE"];
+    XCTAssertTrue(stringRange.length > 0, @"Expected to find 'BASE' in string '%@' but did not", [testRelatedEntity sampleBaseAttribute]);
+
+    XCTAssertFalse([testRelatedEntity respondsToSelector:@selector(sampleConcreteAttribute)], @"testRelatedEntity should respond to selector sampleConcreteAttribute");
 }
 
 - (void)testImportAnEntityRelatedToAbstractEntityViaToManyRelationship

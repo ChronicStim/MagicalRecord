@@ -16,12 +16,9 @@
 
 - (void)testSynchronousSaveActionSaves
 {
-    MagicalRecordStack *currentStack = self.stack;
-    NSManagedObjectContext *currentContext = currentStack.context;
-
     __block NSManagedObjectID *objectId;
 
-    [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
+    [MagicalRecord saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
         NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
 
         expect([inserted hasChanges]).to.beTruthy();
@@ -32,22 +29,28 @@
 
     expect(objectId).toNot.beNil();
 
-    NSError *fetchError;
-    NSManagedObject *fetchedObject = [currentContext existingObjectWithID:objectId error:&fetchError];
+    XCTestExpectation *rootSavingExpectation = [self expectationWithDescription:@"Root Saving Context Fetch Object"];
+    NSManagedObjectContext *rootSavingContext = [NSManagedObjectContext MR_rootSavingContext];
 
-    expect(fetchedObject).toNot.beNil();
-    expect(fetchError).to.beNil();
-    expect([fetchedObject hasChanges]).to.beFalsy();
+    [rootSavingContext performBlock:^{
+        NSError *fetchError;
+        NSManagedObject *fetchedObject = [rootSavingContext existingObjectWithID:objectId error:&fetchError];
+
+        expect(fetchedObject).toNot.beNil();
+        expect(fetchError).to.beNil();
+        expect([fetchedObject hasChanges]).to.beFalsy();
+
+        [rootSavingExpectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:5.0f handler:nil];
 }
 
 - (void)testSynchronousSaveActionMakesInsertedEntitiesAvailableInTheDefaultContext
 {
-    MagicalRecordStack *currentStack = self.stack;
-    NSManagedObjectContext *currentContext = currentStack.context;
-
     __block NSManagedObjectID *objectId;
 
-    [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
+    [MagicalRecord saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
         NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
 
         expect([inserted hasChanges]).to.beTruthy();
@@ -58,25 +61,31 @@
 
     expect(objectId).toNot.beNil();
 
-    NSError *fetchError;
-    NSManagedObject *fetchedObject = [currentContext existingObjectWithID:objectId error:&fetchError];
+    XCTestExpectation *rootSavingExpectation = [self expectationWithDescription:@"Root Saving Context Fetch Object"];
+    NSManagedObjectContext *rootSavingContext = [NSManagedObjectContext MR_rootSavingContext];
 
-    expect(fetchedObject).toNot.beNil();
-    expect(fetchError).to.beNil();
-    expect([fetchedObject hasChanges]).to.beFalsy();
+    [rootSavingContext performBlock:^{
+        NSError *fetchError;
+        NSManagedObject *fetchedObject = [rootSavingContext existingObjectWithID:objectId error:&fetchError];
+
+        expect(fetchedObject).toNot.beNil();
+        expect(fetchError).to.beNil();
+        expect([fetchedObject hasChanges]).to.beFalsy();
+
+        [rootSavingExpectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:5.0f handler:nil];
 }
 
 - (void)testSynchronousSaveActionMakesUpdatesToEntitiesAvailableToTheDefaultContext
 {
-    MagicalRecordStack *currentStack = self.stack;
-    NSManagedObjectContext *currentContext = currentStack.context;
-
     __block NSManagedObjectID *objectId;
     __block NSManagedObject *fetchedObject;
 
     NSString *const kTestAttributeKey = @"booleanTestAttribute";
 
-    [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
+    [MagicalRecord saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
         NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
 
         [inserted setValue:@YES forKey:kTestAttributeKey];
@@ -87,110 +96,135 @@
         objectId = [inserted objectID];
     }];
 
-    fetchedObject = [currentContext objectWithID:objectId];
-    expect([fetchedObject valueForKey:kTestAttributeKey]).to.beTruthy();
+    XCTestExpectation *rootSavingExpectation = [self expectationWithDescription:@"Root Saving Context Fetch Object"];
+    NSManagedObjectContext *rootSavingContext = [NSManagedObjectContext MR_rootSavingContext];
 
-    [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
+    [rootSavingContext performBlock:^{
+        fetchedObject = [rootSavingContext objectWithID:objectId];
+        expect([fetchedObject valueForKey:kTestAttributeKey]).to.beTruthy();
+
+        [rootSavingExpectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:5.0f handler:nil];
+
+    [MagicalRecord saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
         NSManagedObject *changed = [localContext objectWithID:objectId];
 
         [changed setValue:@NO forKey:kTestAttributeKey];
     }];
 
-    fetchedObject = [currentContext objectWithID:objectId];
+    rootSavingExpectation = [self expectationWithDescription:@"Root Saving Context Fetch Object"];
 
-    // Async since the merge to the main thread context after persistence
-    expect([fetchedObject valueForKey:kTestAttributeKey]).will.beFalsy();
-}
+    [rootSavingContext performBlock:^{
+        fetchedObject = [rootSavingContext objectWithID:objectId];
 
-- (void)testSaveActionDoesNotAssignEntitiesWithoutAContextToAContext
-{
-    MagicalRecordStack *currentStack = self.stack;
+        // Async since the merge to the main thread context after persistence
+        expect([fetchedObject valueForKey:kTestAttributeKey]).to.beFalsy();
 
-    __block NSManagedObjectID *objectId;
-
-    [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
-        NSEntityDescription *entityDescription = [NSEntityDescription entityForName:[SingleEntityWithNoRelationships MR_entityName] inManagedObjectContext:localContext];
-        NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityWithDescription:entityDescription inContext:nil];
-
-        expect([inserted hasChanges]).to.beFalsy();
-        expect([inserted managedObjectContext]).to.beNil;
-        
-        objectId = [inserted objectID];
+        [rootSavingExpectation fulfill];
     }];
 
-    expect([objectId isTemporaryID]).to.beTruthy;
+    [self waitForExpectationsWithTimeout:5.0f handler:nil];
 }
 
 #pragma mark - Asynchronous Saves
 
 - (void)testAsynchronousSaveActionSaves
 {
-    MagicalRecordStack *currentStack = self.stack;
-    NSManagedObjectContext *currentContext = currentStack.context;
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Save Completed"];
 
     __block BOOL saveSuccessState = NO;
     __block NSError *saveError;
     __block NSManagedObjectID *objectId;
-    __block NSManagedObject *existingObject;
-    __block NSError *existingObjectError;
 
-    [currentStack saveWithBlock:^(NSManagedObjectContext *localContext) {
+    [MagicalRecord saveWithBlock:^(NSManagedObjectContext *localContext) {
         NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
 
         expect([inserted hasChanges]).to.beTruthy();
 
-        [localContext obtainPermanentIDsForObjects:@[inserted] error:nil];
+        expect([localContext obtainPermanentIDsForObjects:@[inserted] error:nil]).to.beTruthy();
         objectId = [inserted objectID];
-    } completion:^(BOOL success, NSError *error) {
-        saveSuccessState = success;
+
+        expect(objectId).toNot.beNil();
+        expect(objectId.isTemporaryID).to.beFalsy();
+    } completion:^(BOOL contextDidSave, NSError *error) {
+        saveSuccessState = contextDidSave;
         saveError = error;
-        existingObject = [currentContext existingObjectWithID:objectId error:&existingObjectError];
+
+        expect(saveSuccessState).to.beTruthy();
+        expect(saveError).to.beNil();
+
+        NSManagedObjectContext *rootSavingContext = [NSManagedObjectContext MR_rootSavingContext];
+
+        [rootSavingContext performBlockAndWait:^{
+            NSError *existingObjectError;
+            NSManagedObject *existingObject = [rootSavingContext existingObjectWithID:objectId error:&existingObjectError];
+
+            expect(existingObject).toNot.beNil();
+            expect([existingObject hasChanges]).to.beFalsy();
+            expect(existingObjectError).to.beNil();
+
+            [expectation fulfill];
+        }];
     }];
 
-    expect(saveSuccessState).will.beTruthy();
-    expect(saveError).will.beNil();
-    expect(existingObjectError).will.beNil();
-    expect(existingObject).willNot.beNil();
-    expect([existingObject hasChanges]).will.beFalsy();
+    [self waitForExpectationsWithTimeout:5.0f handler:nil];
+}
+
+- (void)testAsynchronousSaveActionCallsCompletionBlockOnTheMainThread
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Save Completed"];
+
+    [MagicalRecord saveWithBlock:^(NSManagedObjectContext *localContext) {
+        [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+    } completion:^(BOOL contextDidSave, NSError *error) {
+        expect([NSThread isMainThread]).to.beTruthy();
+
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:5.0f handler:nil];
 }
 
 - (void)testAsynchronousSaveActionMakesInsertedEntitiesAvailableInTheDefaultContext
 {
-    MagicalRecordStack *currentStack = self.stack;
-    NSManagedObjectContext *currentContext = currentStack.context;
-
-    __block BOOL saveSuccessState = NO;
     __block NSManagedObjectID *objectId;
-    __block NSManagedObject *fetchedObject;
 
-    [currentStack saveWithBlock:^(NSManagedObjectContext *localContext) {
+    XCTestExpectation *contextSavedExpectation = [self expectationWithDescription:@"Context Did Save"];
+
+    [MagicalRecord saveWithBlock:^(NSManagedObjectContext *localContext) {
         NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
 
         expect([inserted hasChanges]).to.beTruthy();
 
         [localContext obtainPermanentIDsForObjects:@[inserted] error:nil];
         objectId = [inserted objectID];
-    } completion:^(BOOL success, NSError *error) {
-        saveSuccessState = success;
-        fetchedObject = [currentContext objectWithID:objectId];
+    } completion:^(BOOL contextDidSave, NSError *error) {
+        expect(contextDidSave).to.beTruthy();
+
+        NSManagedObjectContext *rootSavingContext = [NSManagedObjectContext MR_rootSavingContext];
+
+        [rootSavingContext performBlock:^{
+            NSManagedObject *fetchedObject = [rootSavingContext objectWithID:objectId];
+            expect(fetchedObject).toNot.beNil();
+            expect([fetchedObject hasChanges]).to.beFalsy();
+
+            [contextSavedExpectation fulfill];
+        }];
     }];
 
-    expect(saveSuccessState).will.beTruthy();
-    expect(fetchedObject).willNot.beNil();
-    expect([fetchedObject hasChanges]).will.beFalsy();
+    [self waitForExpectationsWithTimeout:5.0f handler:nil];
 }
 
 - (void)testAsynchronousSaveActionMakesUpdatesToEntitiesAvailableToTheDefaultContext
 {
-    MagicalRecordStack *currentStack = self.stack;
-    NSManagedObjectContext *currentContext = currentStack.context;
-
     __block NSManagedObjectID *objectId;
     __block NSManagedObject *fetchedObject;
 
     NSString *const kTestAttributeKey = @"booleanTestAttribute";
 
-    [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
+    [MagicalRecord saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
         NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
 
         [inserted setValue:@YES forKey:kTestAttributeKey];
@@ -201,18 +235,24 @@
         objectId = [inserted objectID];
     }];
 
-    fetchedObject = [currentContext objectWithID:objectId];
-    expect([fetchedObject valueForKey:kTestAttributeKey]).to.beTruthy();
+    NSManagedObjectContext *rootSavingContext = [NSManagedObjectContext MR_rootSavingContext];
 
-    [currentStack saveWithBlock:^(NSManagedObjectContext *localContext) {
-        NSManagedObject *changed = [localContext objectWithID:objectId];
-
-        [changed setValue:@NO forKey:kTestAttributeKey];
-    } completion:^(BOOL success, NSError *error) {
-        fetchedObject = [currentContext objectWithID:objectId];
+    [rootSavingContext performBlockAndWait:^{
+        fetchedObject = [[NSManagedObjectContext MR_rootSavingContext] objectWithID:objectId];
+        expect([fetchedObject valueForKey:kTestAttributeKey]).to.beTruthy();
     }];
 
-    expect([fetchedObject valueForKey:kTestAttributeKey]).will.beFalsy();
+    [MagicalRecord saveWithBlock:^(NSManagedObjectContext *localContext) {
+        NSManagedObject *changed = [localContext objectWithID:objectId];
+        
+        [changed setValue:@NO forKey:kTestAttributeKey];
+    } completion:^(BOOL contextDidSave, NSError *error) {
+        [rootSavingContext performBlockAndWait:^{
+            fetchedObject = [rootSavingContext objectWithID:objectId];
+            expect(fetchedObject).toNot.beNil();
+            expect([fetchedObject valueForKey:kTestAttributeKey]).to.beFalsy();
+        }];
+    }];
 }
 
 @end

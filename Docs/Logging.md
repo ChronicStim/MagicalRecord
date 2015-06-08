@@ -1,35 +1,44 @@
 ## Logging
 
-MagicalRecord has logging built in to most of it's interactions with Core Data. When errors occur during fetching or saving data, these errors are captured and (if you've enabled them) logged to the console.
+MagicalRecord has logging built in to most of its interactions with Core Data. When errors occur during fetching or saving data, these errors are captured and (if you've enabled them) logged to the console.
 
-Logging can be enabled by placing the following preprocessor statement before your first import of `MagicalRecord.h`, like so:
+Logging is configured to output debugging messages (**MagicalRecordLoggingLevelDebug**) by default in debug builds, and will output error messages (**MagicalRecordLoggingLevelError**) in release builds.
 
-```objective-c
-#define MR_LOGGING_ENABLED 1
-#import <MagicalRecord/MagicalRecord.h>
-```
+Logging can be configured by calling `[MagicalRecord setLoggingLevel:];` using one of the predefined logging levels:
 
-Logging can be configured by calling `[MagicalRecord setLoggingLevel:…];` using one of the predefined logging masks:
-
-- **MagicalRecordLoggingLevelOff**: Don't log anything
-- **MagicalRecordLoggingLevelFatal**: Log all fatal messages
-- **MagicalRecordLoggingLevelError**: Log all errors and fatal messages
-- **MagicalRecordLoggingLevelWarn**: Log warnings, errors and fatal messages
+- **MagicalRecordLogLevelOff**: Don't log anything
+- **MagicalRecordLoggingLevelError**: Log all errors
+- **MagicalRecordLoggingLevelWarn**: Log warnings and errors
 - **MagicalRecordLoggingLevelInfo**: Log informative, warning and error messages
+- **MagicalRecordLoggingLevelDebug**: Log all debug, informative, warning and error messages
 - **MagicalRecordLoggingLevelVerbose**: Log verbose diagnostic, informative, warning and error messages
 
-The logging level defaults to `MagicalRecordLoggingLevelVerbose`.
-
-## Disabling Logs
-
-Setting the logging mask to **MagicalRecordLoggingLevelOff** completely disables MagicalRecord's logging.
+The logging level defaults to `MagicalRecordLoggingLevelWarn`.
 
 ## CocoaLumberjack
 
-If it's available, MagicalRecord will direct it's logs to [CocoaLumberjack](https://github.com/CocoaLumberjack/CocoaLumberjack). All you need to do is make sure you've imported CocoaLumberjack before you import MagicalRecord, like so:
+If it's available, MagicalRecord will direct its logs to [CocoaLumberjack](https://github.com/CocoaLumberjack/CocoaLumberjack). All you need to do is make sure you've imported CocoaLumberjack before you import MagicalRecord, like so:
 
 ```objective-c
-#import <CocoaLumberjack/DDLog.h>
-#define MR_LOGGING_ENABLED 1
+// Objective-C
+#import <CocoaLumberjack/CocoaLumberjack.h>
 #import <MagicalRecord/MagicalRecord.h>
 ```
+
+```swift
+// Swift
+import CocoaLumberjack
+import MagicalRecord
+```
+
+## Disabling Logging Completely
+
+For most people this should be unnecessary. Setting the logging level to **MagicalRecordLogLevelOff** will ensure that no logs are printed.
+
+Even when using `MagicalRecordLogLevelOff`, a very quick check may be performed whenever a log call is made. If you absolutely need to disable the logging, you will need to define the following when compiling MagicalRecord:
+
+```objective-c
+#define MR_LOGGING_DISABLED 1
+```
+
+Please note that this will only work if you've added MagicalRecord's source to your own project. You can also add this to the MagicalRecord project's `OTHER_CFLAGS` as `-DMR_LOGGING_DISABLED=1`.

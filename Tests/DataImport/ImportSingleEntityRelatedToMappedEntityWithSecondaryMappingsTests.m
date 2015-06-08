@@ -5,11 +5,11 @@
 //  Created by Saul Mora on 8/18/11.
 //  Copyright (c) 2011 Magical Panda Software LLC. All rights reserved.
 //
-#import "MagicalRecordDataImportTestCase.h"
+#import "MagicalDataImportTestCase.h"
 #import "SingleEntityRelatedToMappedEntityWithSecondaryMappings.h"
 #import "MappedEntity.h"
 
-@interface ImportSingleEntityRelatedToMappedEntityWithSecondaryMappingsTests : MagicalRecordDataImportTestCase
+@interface ImportSingleEntityRelatedToMappedEntityWithSecondaryMappingsTests : MagicalDataImportTestCase
 
 @end
 
@@ -22,11 +22,9 @@
 
 - (void)testImportMappedAttributeUsingSecondaryMappedKeyName
 {
-    NSManagedObjectContext *stackContext = self.stack.context;
+    SingleEntityRelatedToMappedEntityWithSecondaryMappings *entity = [[self testEntityClass] MR_importFromObject:self.testEntityData];
 
-    SingleEntityRelatedToMappedEntityWithSecondaryMappings *entity = [[self testEntityClass] MR_importFromObject:self.testEntityData inContext:stackContext];
-
-    [stackContext MR_saveToPersistentStoreAndWait];
+    [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
 
     XCTAssertNotNil(entity, @"Entity should not be nil");
 

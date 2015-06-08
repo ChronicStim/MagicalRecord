@@ -31,7 +31,7 @@
 
 @end
 
-@implementation XCTestCase (FixtureHelpers)
+@implementation XCTest (FixtureHelpers)
 
 - (id) dataFromJSONFixture;
 {

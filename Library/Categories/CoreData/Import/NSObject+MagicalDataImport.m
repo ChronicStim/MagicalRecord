@@ -7,25 +7,28 @@
 //
 
 #import "NSObject+MagicalDataImport.h"
-#import "MagicalRecord.h"
+#import "NSAttributeDescription+MagicalDataImport.h"
+#import "NSEntityDescription+MagicalDataImport.h"
+#import "NSManagedObject+MagicalDataImport.h"
+#import "NSRelationshipDescription+MagicalDataImport.h"
 #import "MagicalRecordLogging.h"
 
 NSUInteger const kMagicalRecordImportMaximumAttributeFailoverDepth = 10;
 
-@implementation NSObject (MagicalRecordDataImport)
 
-- (NSString *) MR_lookupKeyForProperty:(NSPropertyDescription *)propertyDescription;
+@implementation NSObject (MagicalRecord_DataImport)
+
+- (NSString *) MR_lookupKeyForAttribute:(NSAttributeDescription *)attributeInfo;
 {
-    NSString *attributeName = [propertyDescription name];
-    NSDictionary *userInfo = [propertyDescription userInfo];
-    NSString *lookupKey = [userInfo valueForKey:kMagicalRecordImportAttributeKeyMapKey] ?: attributeName;
+    NSString *attributeName = [attributeInfo name];
+    NSString *lookupKey = [[attributeInfo userInfo] valueForKey:kMagicalRecordImportAttributeKeyMapKey] ?: attributeName;
     
     id value = [self valueForKeyPath:lookupKey];
     
     for (NSUInteger i = 1; i < kMagicalRecordImportMaximumAttributeFailoverDepth && value == nil; i++)
     {
-        attributeName = [NSString stringWithFormat:@"%@.%tu", kMagicalRecordImportAttributeKeyMapKey, i];
-        lookupKey = [userInfo valueForKey:attributeName];
+        attributeName = [NSString stringWithFormat:@"%@.%lu", kMagicalRecordImportAttributeKeyMapKey, (unsigned long)i];
+        lookupKey = [[attributeInfo userInfo] valueForKey:attributeName];
         if (lookupKey == nil) 
         {
             return nil;
@@ -38,7 +41,7 @@ NSUInteger const kMagicalRecordImportMaximumAttributeFailoverDepth = 10;
 
 - (id) MR_valueForAttribute:(NSAttributeDescription *)attributeInfo
 {
-    NSString *lookupKey = [self MR_lookupKeyForProperty:attributeInfo];
+    NSString *lookupKey = [self MR_lookupKeyForAttribute:attributeInfo];
     return lookupKey ? [self valueForKeyPath:lookupKey] : nil;
 }
 
@@ -47,12 +50,13 @@ NSUInteger const kMagicalRecordImportMaximumAttributeFailoverDepth = 10;
     NSEntityDescription *destinationEntity = [relationshipInfo destinationEntity];
     if (destinationEntity == nil) 
     {
-        MRLogWarn(@"Unable to find entity for type '%@'", [self valueForKey:kMagicalRecordImportRelationshipTypeKey]);
+        MRLogError(@"Unable to find entity for type '%@'", [self valueForKey:kMagicalRecordImportRelationshipTypeKey]);
         return nil;
     }
     
-    NSAttributeDescription *primaryKeyAttribute = [destinationEntity MR_primaryAttribute];
-    NSString *lookupKey = [self MR_lookupKeyForProperty:primaryKeyAttribute] ?: [primaryKeyAttribute name];
+    NSString               *primaryKeyName      = [relationshipInfo MR_primaryKey];
+    NSAttributeDescription *primaryKeyAttribute = [destinationEntity MR_attributeDescriptionForName:primaryKeyName];
+    NSString               *lookupKey           = [self MR_lookupKeyForAttribute:primaryKeyAttribute] ?: [primaryKeyAttribute name];
 
     return lookupKey;
 }

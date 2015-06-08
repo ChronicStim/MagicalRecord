@@ -8,19 +8,22 @@
 
 #import "MagicalImportFunctions.h"
 
-NSString *MRAttributeNameFromString(NSString *value)
+
+#pragma mark - Data import helper functions
+
+NSString * MR_attributeNameFromString(NSString *value)
 {
     NSString *firstCharacter = [[value substringToIndex:1] capitalizedString];
     return [firstCharacter stringByAppendingString:[value substringFromIndex:1]];
 }
 
-NSString *MRPrimaryKeyNameFromString(NSString *value)
+NSString * MR_primaryKeyNameFromString(NSString *value)
 {
     NSString *firstCharacter = [[value substringToIndex:1] lowercaseString];
     return [firstCharacter stringByAppendingFormat:@"%@ID", [value substringFromIndex:1]];
 }
 
-NSDate *MRAdjustDateForDST(NSDate *date)
+NSDate * MR_adjustDateForDST(NSDate *date)
 {
     NSTimeInterval dstOffset = [[NSTimeZone localTimeZone] daylightSavingTimeOffsetForDate:date];
     NSDate *actualDate = [date dateByAddingTimeInterval:dstOffset];
@@ -28,7 +31,7 @@ NSDate *MRAdjustDateForDST(NSDate *date)
     return actualDate;
 }
 
-NSDate *MRDateFromString(NSString *value, NSString *format)
+NSDate * MR_dateFromString(NSString *value, NSString *format)
 {
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
@@ -40,16 +43,45 @@ NSDate *MRDateFromString(NSString *value, NSString *format)
     return parsedDate;
 }
 
-NSDate *MRDateFromNumber(NSNumber *value, BOOL milliseconds)
+NSDate * MR_dateFromNumber(NSNumber *value, BOOL milliseconds)
 {
     NSTimeInterval timeInterval = [value doubleValue];
+    if (milliseconds) {
+        timeInterval = timeInterval / 1000.00;
+    }
+    return [NSDate dateWithTimeIntervalSince1970:timeInterval];
+}
 
-    if (milliseconds)
+NSNumber * MR_numberFromString(NSString *value) {
+    return [NSNumber numberWithDouble:[value doubleValue]];
+}
+
+NSInteger* MR_newColorComponentsFromString(NSString *serializedColor)
+{
+    NSScanner *colorScanner = [NSScanner scannerWithString:serializedColor];
+    NSString *colorType;
+    [colorScanner scanUpToString:@"(" intoString:&colorType];
+    
+    NSInteger *componentValues = malloc(4 * sizeof(NSInteger));
+    if (componentValues == NULL)
     {
         timeInterval = timeInterval / 1000.00;
     }
+  
+    if ([colorType hasPrefix:@"rgba"])
+    {
+        NSCharacterSet *rgbaCharacterSet = [NSCharacterSet characterSetWithCharactersInString:@"(,)"];
+        
+        NSInteger *componentValue = componentValues;
+        while (![colorScanner isAtEnd]) 
+        {
+            [colorScanner scanCharactersFromSet:rgbaCharacterSet intoString:nil];
+            [colorScanner scanInteger:componentValue];
+            componentValue++;
+        }
+    }
 
-    return [NSDate dateWithTimeIntervalSince1970:timeInterval];
+    return componentValues;
 }
 
 NSNumber *MRNumberFromString(NSString *value)
@@ -59,9 +91,9 @@ NSNumber *MRNumberFromString(NSString *value)
 
 #if TARGET_OS_IPHONE
 
-UIColor *MRColorFromString(NSString *serializedColor)
+UIColor * MR_colorFromString(NSString *serializedColor)
 {
-    NSInteger *componentValues = MRNewColorComponentsFromString(serializedColor);
+    NSInteger *componentValues = MR_newColorComponentsFromString(serializedColor);
     if (componentValues == NULL)
     {
         return nil;
@@ -78,9 +110,9 @@ UIColor *MRColorFromString(NSString *serializedColor)
 
 #else
 
-NSColor *MRColorFromString(NSString *serializedColor)
+NSColor * MR_colorFromString(NSString *serializedColor)
 {
-    NSInteger *componentValues = MRNewColorComponentsFromString(serializedColor);
+    NSInteger *componentValues = MR_newColorComponentsFromString(serializedColor);
     if (componentValues == NULL)
     {
         return nil;
@@ -95,32 +127,3 @@ NSColor *MRColorFromString(NSString *serializedColor)
 }
 
 #endif
-
-NSInteger *MRNewColorComponentsFromString(NSString *serializedColor)
-{
-    NSScanner *colorScanner = [NSScanner scannerWithString:serializedColor];
-    NSString *colorType;
-    [colorScanner scanUpToString:@"("
-                      intoString:&colorType];
-
-    NSInteger *componentValues = malloc(4 * sizeof(NSInteger));
-    if (componentValues == NULL)
-    {
-        return NULL;
-    }
-
-    if ([colorType hasPrefix:@"rgba"])
-    {
-        NSCharacterSet *rgbaCharacterSet = [NSCharacterSet characterSetWithCharactersInString:@"(,)"];
-
-        NSInteger *componentValue = componentValues;
-        while (![colorScanner isAtEnd])
-        {
-            [colorScanner scanCharactersFromSet:rgbaCharacterSet
-                                     intoString:nil];
-            [colorScanner scanInteger:componentValue];
-            componentValue++;
-        }
-    }
-    return componentValues;
-}

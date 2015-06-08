@@ -15,7 +15,7 @@
 
 @end
 
-@interface XCTestCase (FixtureHelpers)
+@interface XCTest (FixtureHelpers)
 
 - (id) dataFromJSONFixture;
 
