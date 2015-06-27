@@ -52,7 +52,7 @@ static MagicalRecordStack *defaultStack;
 {
     defaultStack = stack;
     [stack loadStack];
-    MRLogVerbose(@"Default Core Data Stack Initialized: %@", stack);
+    //MRLogVerbose(@"Default Core Data Stack Initialized: %@", stack);
 }
 
 + (instancetype) stack;
