@@ -44,3 +44,14 @@ FOUNDATION_EXPORT const unsigned char MagicalRecordVersionString[];
 #import <MagicalRecord/NSAttributeDescription+MagicalDataImport.h>
 #import <MagicalRecord/NSRelationshipDescription+MagicalDataImport.h>
 #import <MagicalRecord/NSEntityDescription+MagicalDataImport.h>
+
+#import <MagicalRecord/MagicalRecordStack.h>
+#import <MagicalRecord/MagicalRecordStack+Actions.h>
+#import <MagicalRecord/SQLiteMagicalRecordStack.h>
+#import <MagicalRecord/SQLiteWithSavingContextMagicalRecordStack.h>
+#import <MagicalRecord/ClassicSQLiteMagicalRecordStack.h>
+#import <MagicalRecord/ClassicWithBackgroundCoordinatorSQLiteMagicalRecordStack.h>
+#import <MagicalRecord/InMemoryMagicalRecordStack.h>
+#import <MagicalRecord/AutoMigratingMagicalRecordStack.h>
+#import <MagicalRecord/AutoMigratingWithSourceAndTargetModelMagicalRecordStack.h>
+#import <MagicalRecord/ManuallyMigratingMagicalRecordStack.h>
