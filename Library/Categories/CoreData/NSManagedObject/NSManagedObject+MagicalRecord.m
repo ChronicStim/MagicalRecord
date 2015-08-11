@@ -121,6 +121,24 @@
 	return [self MR_executeFetchRequestAndReturnFirstObject:request inContext:[[MagicalRecordStack defaultStack] context]];
 }
 
++ (NSManagedObjectID *) MR_executeFetchRequestAndReturnFirstNSManagedObjectID:(NSFetchRequest *)request;
+{
+    return [self MR_executeFetchRequestAndReturnFirstNSManagedObjectID:request inContext:[[MagicalRecordStack defaultStack] context]];
+}
+
++ (NSManagedObjectID *) MR_executeFetchRequestAndReturnFirstNSManagedObjectID:(NSFetchRequest *)request inContext:(NSManagedObjectContext *)context;
+{
+    [request setFetchLimit:1];
+    [request setResultType:NSManagedObjectIDResultType];
+    
+    NSArray *results = [self MR_executeFetchRequest:request inContext:context];
+    if ([results count] == 0)
+    {
+        return nil;
+    }
+    return [results objectAtIndex:0];
+}
+
 #pragma mark - Creating Entities
 
 + (instancetype) MR_createEntity

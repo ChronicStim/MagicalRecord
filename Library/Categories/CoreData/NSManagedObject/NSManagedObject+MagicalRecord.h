@@ -54,7 +54,10 @@
 + (id) MR_executeFetchRequestAndReturnFirstObject:(NSFetchRequest *)request;
 + (id) MR_executeFetchRequestAndReturnFirstObject:(NSFetchRequest *)request inContext:(NSManagedObjectContext *)context;
 
-/** 
++ (NSManagedObjectID *) MR_executeFetchRequestAndReturnFirstNSManagedObjectID:(NSFetchRequest *)request;
++ (NSManagedObjectID *) MR_executeFetchRequestAndReturnFirstNSManagedObjectID:(NSFetchRequest *)request inContext:(NSManagedObjectContext *)context;
+
+/**
  @name Creating Entities
  */
 
