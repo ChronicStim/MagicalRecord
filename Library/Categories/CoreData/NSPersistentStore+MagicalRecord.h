@@ -59,6 +59,7 @@
  @since Available in v2.3 and later.
  */
 - (BOOL) MR_removePersistentStoreFiles;
++ (BOOL) MR_removePersistentStoreFilesAtURL:(NSURL*)url;
 
 /**
  Removes the persistent store files at the specified URL, as well as any sidecar files that are present, such as STORENAME.sqlite-shm and STORENAME.sqlite-wal
