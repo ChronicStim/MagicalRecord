@@ -20,17 +20,18 @@ typedef NS_OPTIONS(NSUInteger, MRContextSaveOptions) {
     /** When saving, continue saving parent contexts until the changes are present in the persistent store. */
     MRContextSaveOptionsSaveParentContexts = 1 << 0,
 
-    /** Peform saves synchronously, blocking execution on the current thread until the save is complete. */
+    /** Perform saves synchronously, blocking execution on the current thread until the save is complete. */
     MRContextSaveOptionsSaveSynchronously = 1 << 1
 };
 
-typedef void (^MRSaveCompletionHandler)(BOOL success, NSError *error);
+typedef void (^MRSaveCompletionHandler)(BOOL success, NSError * __nullable error);
 
 /**
  Category methods to simplify saving managed object contexts.
 
  @since Available in 2.0 and later.
  */
+NS_ASSUME_NONNULL_BEGIN
 @interface NSManagedObjectContext (MagicalSaves)
 
 /**
@@ -106,3 +107,4 @@ typedef void (^MRSaveCompletionHandler)(BOOL success, NSError *error);
  - (void) MR_saveWithOptions:(MRContextSaveOptions)saveOptions completion:(MRSaveCompletionHandler)completion;
 
 @end
+NS_ASSUME_NONNULL_END

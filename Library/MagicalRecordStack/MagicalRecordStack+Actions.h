@@ -9,8 +9,8 @@
 #import "NSManagedObjectContext+MagicalRecord.h"
 #import "NSManagedObjectContext+MagicalSaves.h"
 
+NS_ASSUME_NONNULL_BEGIN
 dispatch_queue_t MR_saveQueue(void);
-
 
 @interface MagicalRecordStack (Actions)
 
@@ -18,7 +18,7 @@ dispatch_queue_t MR_saveQueue(void);
  */
 - (void) saveWithBlock:(void(^)(NSManagedObjectContext *localContext))block;
 - (void) saveWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(MRSaveCompletionHandler)completion;
-- (void) saveWithBlock:(void (^)(NSManagedObjectContext *))block identifier:(NSString *)contextWorkingName completion:(MRSaveCompletionHandler)completion;
+- (void) saveWithBlock:(void (^)(NSManagedObjectContext *))block identifier:(NSString *)contextWorkingName completion:(MRSaveCompletionHandler __nullable)completion;
 
 - (void) saveWithIdentifier:(NSString *)identifier block:(void(^)(NSManagedObjectContext *))block;
 
@@ -26,7 +26,7 @@ dispatch_queue_t MR_saveQueue(void);
 /**
  *  Synchronously saves the default managed object context (if there is one) and any parent contexts.
  *
- *  @param block Make changes to CoreData objects in this block using the passed in localContext. The block will be performed on a background queue, and once complete, the context will be saved.
+ *  @param block Make changes to CoreData objects in this block using the passed in localContext. The block itself is not guaranteed to run on any particular background thread/queue, and once complete, the context will be saved.
  *
  *  @return Success state of the save operation
  */
@@ -37,11 +37,12 @@ dispatch_queue_t MR_saveQueue(void);
  *
  *  Synchronously saves the default managed object context (if there is one) and any parent contexts.
  *
- *  @param block Make changes to CoreData objects in this block using the passed in localContext. The block will be performed on a background queue, and once complete, the context will be saved.
+ *  @param block Make changes to CoreData objects in this block using the passed in localContext. The block itself is not guaranteed to run on any particular background thread/queue, the context will be saved.
  *  @param error Pass in an NSError by reference to receive any errors encountered during the save.
  *
  *  @return Whether the save was successful
  */
-- (BOOL) saveWithBlockAndWait:(void(^)(NSManagedObjectContext *localContext))block error:(NSError **)error;
+- (BOOL) saveWithBlockAndWait:(void(^)(NSManagedObjectContext *localContext))block error:(NSError ** __nullable)error;
 
 @end
+NS_ASSUME_NONNULL_END

@@ -6,7 +6,6 @@
 
 #import <CoreData/CoreData.h>
 #import "MagicalRecord.h"
-#import "MagicalRecordMOGeneratorProtocol.h"
 #import "MagicalRecordDeprecated.h"
 
 @protocol MagicalRecordManagedObjectProtocol <NSObject>
@@ -24,7 +23,8 @@
 
  @since Available in v1.0 and later.
  */
-@interface NSManagedObject (MagicalRecord) <MagicalRecordMOGeneratorProtocol, MagicalRecordManagedObjectProtocol>
+NS_ASSUME_NONNULL_BEGIN
+@interface NSManagedObject (MagicalRecord) <MagicalRecordManagedObjectProtocol>
 
 /**
  @name Entity Information
@@ -74,7 +74,7 @@
 
  @return a new instance of the current NSManagedObject subclass
  */
-+ (instancetype) MR_createEntityWithDescription:(NSEntityDescription *)entityDescription inContext:(NSManagedObjectContext *)context;
++ (instancetype) MR_createEntityWithDescription:(NSEntityDescription * __nullable)entityDescription inContext:(NSManagedObjectContext *)context;
 
 /**
  Check if an object has been saved to at least one persistent store
@@ -267,6 +267,7 @@
 
 @end
 
+
 @interface NSManagedObject (MagicalRecordDeprecated)
 
 + (instancetype) MR_createInContext:(NSManagedObjectContext *)context MR_DEPRECATED_IN_3_0_PLEASE_USE("MR_createEntityInContext:");
@@ -274,3 +275,4 @@
 - (BOOL) MR_deleteInContext:(NSManagedObjectContext *)context MR_DEPRECATED_IN_3_0_PLEASE_USE("MR_deleteEntityInContext:");
 
 @end
+NS_ASSUME_NONNULL_END

@@ -8,13 +8,15 @@
 
 #import <CoreData/CoreData.h>
 
+NS_ASSUME_NONNULL_BEGIN
 @interface NSPersistentStoreCoordinator (MagicalInMemoryStoreAdditions)
 
 + (NSPersistentStoreCoordinator *) MR_coordinatorWithInMemoryStore;
 + (NSPersistentStoreCoordinator *) MR_coordinatorWithInMemoryStoreWithModel:(NSManagedObjectModel *)model;
-+ (NSPersistentStoreCoordinator *) MR_coordinatorWithInMemoryStoreWithModel:(NSManagedObjectModel *)model withOptions:(NSDictionary *)options;
++ (NSPersistentStoreCoordinator *) MR_coordinatorWithInMemoryStoreWithModel:(NSManagedObjectModel *)model withOptions:(NSDictionary * __nullable)options;
 
 - (NSPersistentStore *) MR_addInMemoryStore;
-- (NSPersistentStore *) MR_addInMemoryStoreWithOptions:(NSDictionary *)options;
+- (NSPersistentStore *) MR_addInMemoryStoreWithOptions:(NSDictionary * __nullable)options;
 
 @end
+NS_ASSUME_NONNULL_END

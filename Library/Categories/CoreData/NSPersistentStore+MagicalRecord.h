@@ -8,6 +8,7 @@
 #import "MagicalRecord.h"
 #import "MagicalRecordDeprecated.h"
 
+NS_ASSUME_NONNULL_BEGIN
 @interface NSPersistentStore (MagicalRecord)
 
 /**
@@ -43,7 +44,8 @@
  */
 + (NSURL *) MR_fileURLForStoreNameIfExistsOnDisk:(NSString *)storeFileName;
 
-+ (NSURL *) MR_cloudURLForUbiqutiousContainer:(NSString *)bucketName;
++ (NSURL *) MR_cloudURLForUbiquitousContainer:(NSString *)bucketName;
++ (NSURL *) MR_cloudURLForUbiqutiousContainer:(NSString *)bucketName MR_DEPRECATED_WILL_BE_REMOVED_IN_PLEASE_USE("4.0", "MR_cloudURLForUbiquitousContainer:");
 
 - (NSArray *) MR_sqliteURLs;
 
@@ -59,7 +61,6 @@
  @since Available in v2.3 and later.
  */
 - (BOOL) MR_removePersistentStoreFiles;
-+ (BOOL) MR_removePersistentStoreFilesAtURL:(NSURL*)url;
 
 /**
  Removes the persistent store files at the specified URL, as well as any sidecar files that are present, such as STORENAME.sqlite-shm and STORENAME.sqlite-wal
@@ -80,3 +81,4 @@
 + (NSURL *) MR_urlForStoreName:(NSString *)storeFileName MR_DEPRECATED_IN_3_0_PLEASE_USE("MR_fileURLForStoreNameIfExistsOnDisk:");
 
 @end
+NS_ASSUME_NONNULL_END
