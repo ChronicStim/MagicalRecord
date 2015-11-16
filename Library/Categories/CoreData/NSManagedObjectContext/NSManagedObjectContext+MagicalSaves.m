@@ -130,6 +130,13 @@
         NSError *error = nil;
         BOOL saved = NO;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+        NSUInteger numberOfInsertedObjects = [[self insertedObjects] count];
+        NSUInteger numberOfUpdatedObjects = [[self updatedObjects] count];
+        NSUInteger numberOfDeletedObjects = [[self deletedObjects] count];
+#pragma clang diagnostic pop
+        
         @try
         {
             saved = [self save:&error];
@@ -156,13 +163,6 @@
                 else {
                     MRLogInfo(@"→ Finished saving: %@", [self MR_description]);
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-variable"
-                    NSUInteger numberOfInsertedObjects = [[self insertedObjects] count];
-                    NSUInteger numberOfUpdatedObjects = [[self updatedObjects] count];
-                    NSUInteger numberOfDeletedObjects = [[self deletedObjects] count];
-#pragma clang diagnostic pop
-                    
                     MRLogVerbose(@"Objects - Inserted %tu, Updated %tu, Deleted %tu", numberOfInsertedObjects, numberOfUpdatedObjects, numberOfDeletedObjects);
 
                     if (completion) {
