@@ -24,7 +24,7 @@
       // First, check if we can use Cocoalumberjack for logging
     #ifdef LOG_VERBOSE
         #define MRLog(...)  DDLogVerbose(__VA_ARGS__)
-        #define MRLogError(...) DDLogError(__VA_ARGS__)
+        #define MRLogError(...) CPT_LOGError(__VA_ARGS__)
     #else
         #define MRLog(...) NSLog(@"%s(%p) %@", __PRETTY_FUNCTION__, self, [NSString stringWithFormat:__VA_ARGS__])
         #define MRLogError(...) NSLog(@"%s(%p) %@", __PRETTY_FUNCTION__, self, [NSString stringWithFormat:__VA_ARGS__])

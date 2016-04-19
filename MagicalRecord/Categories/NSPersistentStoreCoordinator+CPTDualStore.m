@@ -25,7 +25,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
     if ( ![fileManager fileExistsAtPath:appDocumentsDirectory isDirectory:NULL] ) {
         NSError *error = nil;
         if (![fileManager createDirectoryAtPath:appDocumentsDirectory withIntermediateDirectories:NO attributes:nil error:&error]) {
-            DDLogError(@"Failed to create application directory: %@ Error: %@", appDocumentsDirectory,[error userInfo]);
+            CPT_LOGError(@"Failed to create application directory: %@ Error: %@", appDocumentsDirectory,[error userInfo]);
             return nil;
         }
     }
@@ -59,7 +59,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
     if ( ![fileManager fileExistsAtPath:cacheFolderPath isDirectory:NULL] ) {
         NSError *error = nil;
         if (![fileManager createDirectoryAtPath:cacheFolderPath withIntermediateDirectories:YES attributes:nil error:&error]) {
-            DDLogError(@"Failed to create report data cache directory: %@ Error: %@", cacheFolderPath,[error userInfo]);
+            CPT_LOGError(@"Failed to create report data cache directory: %@ Error: %@", cacheFolderPath,[error userInfo]);
             return nil;
         }
     }
@@ -74,7 +74,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
         NSManagedObjectModel *mom = [NSManagedObjectModel MR_defaultManagedObjectModel];
         if (!mom) {
             //NSAssert(NO, @"NSManagedObjectModel is nil");
-            DDLogError(@"%@: No model to generate a store from", [self class]);
+            CPT_LOGError(@"%@: No model to generate a store from", [self class]);
             return nil;
         }
         
@@ -123,7 +123,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
         if ([fileManager fileExistsAtPath:storePathNew]) {
             NSError *errorNewRemoval = nil;
             if (![fileManager removeItemAtPath:storePathNew error:&errorNewRemoval]) {
-                DDLogError(@"Removal of %@.new file was not successful",filename);
+                CPT_LOGError(@"Removal of %@.new file was not successful",filename);
             }
         }
         
@@ -137,7 +137,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
             
             if (sourceMetadata == nil) {
                 // deal with error
-                DDLogError(@"Could not retrieve metadata from the store: %@ with Error: %@",storeFilename,[errorCompatibility userInfo]);
+                CPT_LOGError(@"Could not retrieve metadata from the store: %@ with Error: %@",storeFilename,[errorCompatibility userInfo]);
             }
             
             NSManagedObjectModel *destinationModel = [self managedObjectModel];
@@ -150,7 +150,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
                     // Rather than migrate the reports db, just delete it since the data can be recreated later
                     NSError *errorRemoveDB = nil;
                     if (![fileManager removeItemAtPath:storePath error:&errorRemoveDB]) {
-                        DDLogError(@"Removal of %@.sqlite file was not successful",filename);
+                        CPT_LOGError(@"Removal of %@.sqlite file was not successful",filename);
                     }
                 } else {
                     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
@@ -183,9 +183,9 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
                         NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES],NSMigratePersistentStoresAutomaticallyOption,[NSNumber numberWithBool:YES],NSInferMappingModelAutomaticallyOption,@{@"journal_mode":@"DELETE"},NSSQLitePragmasOption,nil];
                         NSError *error = nil;
                         if (![dummyPSC addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeUrl options:options error:&error]) {
-                            DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
+                            CPT_LOGError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
                             NSString *message = [NSString stringWithFormat:@"%@ to %@ migration for store: %@. Failed workaround.",lastVersionRun,versionString,filename];
-                            DDLogError(@"Failed to resolve migration issue. %@",message);
+                            CPT_LOGError(@"Failed to resolve migration issue. %@",message);
                             
                             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                                 NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
@@ -214,7 +214,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
         // Check if a store at the url has already been assigned to the controller
         if (![self persistentStoreForURL:storeUrl]) {
             if (![self addPersistentStoreWithType:NSSQLiteStoreType configuration:configuration URL:storeUrl options:options error:&error]) {
-                DDLogError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
+                CPT_LOGError(@"Core Data Error:%@ : %@",[error localizedDescription],[error userInfo]);
             } else {
                 DDLogInfo(@"Added PersistentStore at URL: %@",storeUrl);
             }
@@ -231,7 +231,7 @@ static NSPersistentStoreCoordinator* _persistentStoreCoordinator = nil;
         if (store) {
             NSError *error = nil;
             if (![self removePersistentStore:store  error:&error]) {
-                DDLogError(@"Error removing store at URL: %@  Error: %@",storeURL,[error userInfo]);
+                CPT_LOGError(@"Error removing store at URL: %@  Error: %@",storeURL,[error userInfo]);
             } else {
                 DDLogInfo(@"PersistentStore has been removed from Coordinator; URL = %@",storeURL);
             }
