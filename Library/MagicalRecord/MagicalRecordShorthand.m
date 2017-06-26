@@ -1,4 +1,4 @@
-#ifdef MR_SHORTHAND
+//#ifdef MR_SHORTHAND
 
 #import "MagicalRecordShorthand.h"
 #import "MagicalRecord.h"
@@ -632,4 +632,4 @@
 
 @end
 
-#endif
+//#endif

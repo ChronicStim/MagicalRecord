@@ -1,4 +1,4 @@
-#ifdef MR_SHORTHAND
+//#ifdef MR_SHORTHAND
 
 #import "MagicalRecordDeprecated.h"
 #import "NSManagedObjectContext+MagicalSaves.h"
@@ -210,4 +210,4 @@
 
 @end
 
-#endif
+//#endif
