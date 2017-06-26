@@ -14,40 +14,38 @@
 
 #import "MagicalRecordLogging.h"
 
-
 @interface ClassicWithBackgroundCoordinatorSQLiteMagicalRecordStack ()
 
 @property (nonatomic, strong, readwrite) NSPersistentStoreCoordinator *backgroundCoordinator;
 
 @end
 
-
 @implementation ClassicWithBackgroundCoordinatorSQLiteMagicalRecordStack
 
-- (NSString *)description;
+- (NSString *)description
 {
     NSMutableString *description = [[super description] mutableCopy];
 
     [description appendFormat:@"Background Coordinator:     %@\n", self.backgroundCoordinator];
-    
+
     return [NSString stringWithString:description];
 }
 
-- (void)reset;
+- (void)reset
 {
     self.backgroundCoordinator = nil;
     [super reset];
 }
 
-- (NSManagedObjectContext *) newConfinementContext;
+- (NSManagedObjectContext *)newPrivateContext
 {
     //TODO: need to setup backgroundContext -> context merges via NSNC, and unsubscribe automatically
-    NSManagedObjectContext *backgroundContext = [NSManagedObjectContext MR_confinementContext];
+    NSManagedObjectContext *backgroundContext = [NSManagedObjectContext MR_privateQueueContext];
     [backgroundContext setPersistentStoreCoordinator:self.backgroundCoordinator];
     return backgroundContext;
 }
 
-- (NSPersistentStoreCoordinator *)backgroundCoordinator;
+- (NSPersistentStoreCoordinator *)backgroundCoordinator
 {
     if (_backgroundCoordinator == nil)
     {
@@ -56,6 +54,5 @@
     }
     return _backgroundCoordinator;
 }
-
 
 @end

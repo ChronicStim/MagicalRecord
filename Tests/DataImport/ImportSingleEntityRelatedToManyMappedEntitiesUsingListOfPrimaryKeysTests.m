@@ -21,7 +21,8 @@
 
     MappedEntity *related = nil;
 
-    for (NSInteger mappedEntityIndex = 0; mappedEntityIndex < 10; mappedEntityIndex++) {
+    for (NSInteger mappedEntityIndex = 0; mappedEntityIndex < 10; mappedEntityIndex++)
+    {
         MappedEntity *testMappedEntity = [MappedEntity MR_createEntityInContext:currentStackContext];
         testMappedEntity.testMappedEntityID = @(mappedEntityIndex);
         testMappedEntity.sampleAttribute = [NSString stringWithFormat:@"test attribute %zd", mappedEntityIndex];
@@ -34,7 +35,7 @@
 
     [currentStackContext MR_saveToPersistentStoreAndWait];
 
-    expect(entity).toNot.beNil();
+    XCTAssertNotNil(entity);
 }
 
 - (void)testDataImportUsingListOfPrimaryKeyIDs
@@ -43,14 +44,14 @@
 
     SingleEntityRelatedToManyMappedEntitiesUsingMappedPrimaryKey *testEntity = [SingleEntityRelatedToManyMappedEntitiesUsingMappedPrimaryKey MR_importFromObject:self.testEntityData inContext:stackContext];
 
-    expect(testEntity).toNot.beNil();
-    expect([SingleEntityRelatedToManyMappedEntitiesUsingMappedPrimaryKey MR_numberOfEntitiesWithContext:stackContext]).to.equal(1);
-    expect([MappedEntity MR_numberOfEntitiesWithContext:stackContext]).to.equal(10);
+    XCTAssertNotNil(testEntity);
+    XCTAssertEqualObjects([SingleEntityRelatedToManyMappedEntitiesUsingMappedPrimaryKey MR_numberOfEntitiesWithContext:stackContext], @1);
+    XCTAssertEqualObjects([MappedEntity MR_numberOfEntitiesWithContext:stackContext], @10);
+    XCTAssertEqual(testEntity.mappedEntities.count, (NSUInteger)5);
 
-    expect(testEntity.mappedEntities).to.haveCountOf(5);
-
-    for (MappedEntity *relatedEntity in testEntity.mappedEntities) {
-        expect(relatedEntity.sampleAttribute).to.beginWith(@"test attribute");
+    for (MappedEntity *relatedEntity in testEntity.mappedEntities)
+    {
+        XCTAssertTrue([relatedEntity.sampleAttribute hasPrefix:@"test attribute"]);
     }
 }
 

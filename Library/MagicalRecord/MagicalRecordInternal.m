@@ -8,14 +8,14 @@
 
 @implementation MagicalRecord
 
-+ (void) cleanUp
++ (void)cleanUp
 {
     [MagicalRecordStack setDefaultStack:nil];
 }
 
-+ (NSString *) defaultStoreName;
++ (NSString *)defaultStoreName
 {
-    NSString *defaultName = [[[NSBundle mainBundle] infoDictionary] valueForKey:(id)kCFBundleNameKey];
+    NSString *defaultName = [[NSBundle mainBundle] bundleIdentifier];
 
     if (defaultName == nil)
     {

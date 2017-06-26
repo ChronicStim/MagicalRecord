@@ -5,17 +5,11 @@
 
 #import <XCTest/XCTest.h>
 #import <CoreData/CoreData.h>
-
-#define EXP_SHORTHAND
-#import "Expecta.h"
-
-#import "MagicalRecord.h"
-
-@class MagicalRecordStack;
+#import <MagicalRecord/MagicalRecord.h>
 
 @interface MagicalRecordTestBase : XCTestCase
 
-@property(readwrite, nonatomic, strong) MagicalRecordStack *stack;
+@property (readwrite, nonatomic, strong) MagicalRecordStack *stack;
 
 /**
  *  Setup and return a new Magical Record stack. Returns an in-memory stack by

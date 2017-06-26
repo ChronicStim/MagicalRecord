@@ -7,6 +7,7 @@
 //
 
 #import "NSManagedObject+MagicalFetching.h"
+#import "NSManagedObject+MagicalFinders.h"
 #import "NSManagedObject+MagicalRequests.h"
 #import "NSFetchedResultsController+MagicalFetching.h"
 
@@ -14,7 +15,7 @@
 
 @protocol NSManagedObjectMagicalFetchingCacheName
 
-- (NSString *) fetchedResultsControllerCacheName;
+- (NSString *)fetchedResultsControllerCacheName;
 
 @end
 
@@ -22,7 +23,7 @@
 
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 
-+ (NSString *) MR_fileCacheNameForObject:(id)object;
++ (NSString *)MR_fileCacheNameForObject:(id)object
 {
     SEL selector = @selector(fetchedResultsControllerCacheName);
     if ([object respondsToSelector:selector])
@@ -38,23 +39,23 @@
     return [NSString stringWithFormat:@"MagicalRecord-Cache-%@", NSStringFromClass([object class])];
 }
 
-+ (NSFetchedResultsController *) MR_fetchController:(NSFetchRequest *)request delegate:(id<NSFetchedResultsControllerDelegate>)delegate useFileCache:(BOOL)useFileCache groupedBy:(NSString *)groupKeyPath inContext:(NSManagedObjectContext *)context
++ (NSFetchedResultsController *)MR_fetchController:(NSFetchRequest *)request delegate:(id<NSFetchedResultsControllerDelegate>)delegate useFileCache:(BOOL)useFileCache groupedBy:(NSString *)groupKeyPath inContext:(NSManagedObjectContext *)context
 {
     NSString *cacheName = useFileCache ? [self MR_fileCacheNameForObject:delegate] : nil;
 
-	NSFetchedResultsController *controller =
-    [[NSFetchedResultsController alloc] initWithFetchRequest:request
-                                        managedObjectContext:context
-                                          sectionNameKeyPath:groupKeyPath
-                                                   cacheName:cacheName];
+    NSFetchedResultsController *controller =
+        [[NSFetchedResultsController alloc] initWithFetchRequest:request
+                                            managedObjectContext:context
+                                              sectionNameKeyPath:groupKeyPath
+                                                       cacheName:cacheName];
     controller.delegate = delegate;
 
     return controller;
 }
 
-+ (NSFetchedResultsController *) MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending delegate:(id<NSFetchedResultsControllerDelegate>)delegate inContext:(NSManagedObjectContext *)context
++ (NSFetchedResultsController *)MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending delegate:(id<NSFetchedResultsControllerDelegate>)delegate inContext:(NSManagedObjectContext *)context
 {
-	NSFetchRequest *request = [self MR_requestAllSortedBy:sortTerm
+    NSFetchRequest *request = [self MR_requestAllSortedBy:sortTerm
                                                 ascending:ascending
                                             withPredicate:searchTerm];
 
@@ -68,9 +69,9 @@
     return controller;
 }
 
-+ (NSFetchedResultsController *) MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending delegate:(id)delegate
++ (NSFetchedResultsController *)MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending delegate:(id<NSFetchedResultsControllerDelegate>)delegate
 {
-	return [self MR_fetchAllGroupedBy:group
+    return [self MR_fetchAllGroupedBy:group
                         withPredicate:searchTerm
                              sortedBy:sortTerm
                             ascending:ascending
@@ -78,7 +79,7 @@
                             inContext:[[MagicalRecordStack defaultStack] context]];
 }
 
-+ (NSFetchedResultsController *) MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context;
++ (NSFetchedResultsController *)MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context
 {
     return [self MR_fetchAllGroupedBy:group
                         withPredicate:searchTerm
@@ -88,7 +89,7 @@
                             inContext:context];
 }
 
-+ (NSFetchedResultsController *) MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending
++ (NSFetchedResultsController *)MR_fetchAllGroupedBy:(NSString *)group withPredicate:(NSPredicate *)searchTerm sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending
 {
     return [self MR_fetchAllGroupedBy:group
                         withPredicate:searchTerm
@@ -97,24 +98,23 @@
                             inContext:[[MagicalRecordStack defaultStack] context]];
 }
 
-
-+ (NSFetchedResultsController *) MR_fetchAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending withPredicate:(NSPredicate *)searchTerm groupBy:(NSString *)groupingKeyPath inContext:(NSManagedObjectContext *)context
++ (NSFetchedResultsController *)MR_fetchAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending withPredicate:(NSPredicate *)searchTerm groupBy:(NSString *)groupingKeyPath inContext:(NSManagedObjectContext *)context
 {
     NSFetchRequest *request = [self MR_requestAllSortedBy:sortTerm
                                                 ascending:ascending
                                             withPredicate:searchTerm];
 
-	NSFetchedResultsController *controller = [self MR_fetchController:request
+    NSFetchedResultsController *controller = [self MR_fetchController:request
                                                              delegate:nil
                                                          useFileCache:NO
                                                             groupedBy:groupingKeyPath
-                                                            inContext:[[MagicalRecordStack defaultStack] context]];
+                                                            inContext:context];
 
     [controller MR_performFetch];
     return controller;
 }
 
-+ (NSFetchedResultsController *) MR_fetchAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending withPredicate:(NSPredicate *)searchTerm groupBy:(NSString *)groupingKeyPath;
++ (NSFetchedResultsController *)MR_fetchAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending withPredicate:(NSPredicate *)searchTerm groupBy:(NSString *)groupingKeyPath
 {
     return [self MR_fetchAllSortedBy:sortTerm
                            ascending:ascending
@@ -123,9 +123,9 @@
                            inContext:[[MagicalRecordStack defaultStack] context]];
 }
 
-+ (NSFetchedResultsController *) MR_fetchAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending withPredicate:(NSPredicate *)searchTerm groupBy:(NSString *)groupingKeyPath delegate:(id<NSFetchedResultsControllerDelegate>)delegate inContext:(NSManagedObjectContext *)context;
++ (NSFetchedResultsController *)MR_fetchAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending withPredicate:(NSPredicate *)searchTerm groupBy:(NSString *)groupingKeyPath delegate:(id<NSFetchedResultsControllerDelegate>)delegate inContext:(NSManagedObjectContext *)context
 {
-	return [self MR_fetchAllGroupedBy:groupingKeyPath
+    return [self MR_fetchAllGroupedBy:groupingKeyPath
                         withPredicate:searchTerm
                              sortedBy:sortTerm
                             ascending:ascending
@@ -133,9 +133,9 @@
                             inContext:context];
 }
 
-+ (NSFetchedResultsController *) MR_fetchAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending withPredicate:(NSPredicate *)searchTerm groupBy:(NSString *)groupingKeyPath delegate:(id<NSFetchedResultsControllerDelegate>)delegate;
++ (NSFetchedResultsController *)MR_fetchAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending withPredicate:(NSPredicate *)searchTerm groupBy:(NSString *)groupingKeyPath delegate:(id<NSFetchedResultsControllerDelegate>)delegate
 {
-	return [self MR_fetchAllSortedBy:sortTerm
+    return [self MR_fetchAllSortedBy:sortTerm
                            ascending:ascending
                        withPredicate:searchTerm
                              groupBy:groupingKeyPath

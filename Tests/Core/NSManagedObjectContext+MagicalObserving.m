@@ -4,7 +4,6 @@
 //
 
 #import "MagicalRecordTestBase.h"
-#import "NSManagedObjectContext+MagicalObserving.h"
 #import "SingleEntityWithNoRelationships.h"
 
 @interface NSManagedObjectContextMagicalObserving : MagicalRecordTestBase
@@ -19,17 +18,26 @@
     NSManagedObjectContext *otherContext = [NSManagedObjectContext MR_privateQueueContextWithStoreCoordinator:self.stack.coordinator];
 
     NSManagedObject *testEntity = [SingleEntityWithNoRelationships MR_createEntityInContext:otherContext];
+    XCTAssertNotNil(testEntity);
+    [otherContext performBlockAndWait:^{
+        XCTAssertTrue(otherContext.hasChanges);
+    }];
 
-    expect(testEntity).toNot.beNil();
-    expect([otherContext hasChanges]).to.beTruthy();
-    expect([stackContext hasChanges]).to.beFalsy();
+    [stackContext performBlockAndWait:^{
+        XCTAssertFalse(stackContext.hasChanges);
+    }];
 
     [stackContext MR_observeContextDidSaveAndSaveChangesToSelf:otherContext];
 
     [otherContext MR_saveOnlySelfAndWait];
 
-    expect([otherContext hasChanges]).to.beFalsy();
-    expect([stackContext hasChanges]).to.beFalsy();
+    [otherContext performBlockAndWait:^{
+        XCTAssertFalse(otherContext.hasChanges);
+    }];
+
+    [stackContext performBlockAndWait:^{
+        XCTAssertFalse(stackContext.hasChanges);
+    }];
 }
 
 @end

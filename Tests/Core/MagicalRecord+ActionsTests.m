@@ -22,22 +22,20 @@
     __block NSManagedObjectID *objectId;
 
     [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
-        NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+        NSManagedObject *insertedObject = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+        XCTAssertTrue(insertedObject.hasChanges);
 
-        expect([inserted hasChanges]).to.beTruthy();
-
-        [localContext obtainPermanentIDsForObjects:@[inserted] error:nil];
-        objectId = [inserted objectID];
+        [localContext obtainPermanentIDsForObjects:@[ insertedObject ] error:nil];
+        objectId = [insertedObject objectID];
     }];
 
-    expect(objectId).toNot.beNil();
+    XCTAssertNotNil(objectId);
 
     NSError *fetchError;
     NSManagedObject *fetchedObject = [currentContext existingObjectWithID:objectId error:&fetchError];
-
-    expect(fetchedObject).toNot.beNil();
-    expect(fetchError).to.beNil();
-    expect([fetchedObject hasChanges]).to.beFalsy();
+    XCTAssertNotNil(fetchedObject);
+    XCTAssertNil(fetchError);
+    XCTAssertFalse(fetchedObject.hasChanges);
 }
 
 - (void)testSynchronousSaveActionMakesInsertedEntitiesAvailableInTheDefaultContext
@@ -49,21 +47,19 @@
 
     [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
         NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+        XCTAssertTrue(inserted.hasChanges);
 
-        expect([inserted hasChanges]).to.beTruthy();
-
-        [localContext obtainPermanentIDsForObjects:@[inserted] error:nil];
+        [localContext obtainPermanentIDsForObjects:@[ inserted ] error:nil];
         objectId = [inserted objectID];
     }];
 
-    expect(objectId).toNot.beNil();
+    XCTAssertNotNil(objectId);
 
     NSError *fetchError;
     NSManagedObject *fetchedObject = [currentContext existingObjectWithID:objectId error:&fetchError];
-
-    expect(fetchedObject).toNot.beNil();
-    expect(fetchError).to.beNil();
-    expect([fetchedObject hasChanges]).to.beFalsy();
+    XCTAssertNotNil(fetchedObject);
+    XCTAssertNil(fetchError);
+    XCTAssertFalse(fetchedObject.hasChanges);
 }
 
 - (void)testSynchronousSaveActionMakesUpdatesToEntitiesAvailableToTheDefaultContext
@@ -77,18 +73,17 @@
     NSString *const kTestAttributeKey = @"booleanTestAttribute";
 
     [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
-        NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+        NSManagedObject *insertedObject = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
 
-        [inserted setValue:@YES forKey:kTestAttributeKey];
+        [insertedObject setValue:@YES forKey:kTestAttributeKey];
+        XCTAssertTrue(insertedObject.hasChanges);
 
-        expect([inserted hasChanges]).to.beTruthy();
-
-        [localContext obtainPermanentIDsForObjects:@[inserted] error:nil];
-        objectId = [inserted objectID];
+        [localContext obtainPermanentIDsForObjects:@[ insertedObject ] error:nil];
+        objectId = [insertedObject objectID];
     }];
 
     fetchedObject = [currentContext objectWithID:objectId];
-    expect([fetchedObject valueForKey:kTestAttributeKey]).to.beTruthy();
+    XCTAssertNotNil([fetchedObject valueForKey:kTestAttributeKey]);
 
     [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
         NSManagedObject *changed = [localContext objectWithID:objectId];
@@ -98,8 +93,7 @@
 
     fetchedObject = [currentContext objectWithID:objectId];
 
-    // Async since the merge to the main thread context after persistence
-    expect([fetchedObject valueForKey:kTestAttributeKey]).will.beFalsy();
+    XCTAssertEqualObjects([fetchedObject valueForKey:kTestAttributeKey], @NO);
 }
 
 - (void)testSaveActionDoesNotAssignEntitiesWithoutAContextToAContext
@@ -110,15 +104,15 @@
 
     [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
         NSEntityDescription *entityDescription = [NSEntityDescription entityForName:[SingleEntityWithNoRelationships MR_entityName] inManagedObjectContext:localContext];
-        NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityWithDescription:entityDescription inContext:nil];
+        NSManagedObject *insertedObject = [[SingleEntityWithNoRelationships alloc] initWithEntity:entityDescription insertIntoManagedObjectContext:nil];
 
-        expect([inserted hasChanges]).to.beFalsy();
-        expect([inserted managedObjectContext]).to.beNil;
-        
-        objectId = [inserted objectID];
+        XCTAssertFalse(insertedObject.hasChanges);
+        XCTAssertNil(insertedObject.managedObjectContext);
+
+        objectId = [insertedObject objectID];
     }];
 
-    expect([objectId isTemporaryID]).to.beTruthy;
+    XCTAssertTrue(objectId.isTemporaryID);
 }
 
 #pragma mark - Asynchronous Saves
@@ -134,24 +128,35 @@
     __block NSManagedObject *existingObject;
     __block NSError *existingObjectError;
 
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Wait for asynchronous context to save"];
+
     [currentStack saveWithBlock:^(NSManagedObjectContext *localContext) {
-        NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+        NSManagedObject *insertedObject = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+        XCTAssertTrue(insertedObject.hasChanges);
 
-        expect([inserted hasChanges]).to.beTruthy();
+        [localContext obtainPermanentIDsForObjects:@[ insertedObject ] error:nil];
+        objectId = [insertedObject objectID];
+    }
+        completion:^(BOOL success, NSError *error) {
+            saveSuccessState = success;
+            saveError = error;
+            existingObject = [currentContext existingObjectWithID:objectId error:&existingObjectError];
 
-        [localContext obtainPermanentIDsForObjects:@[inserted] error:nil];
-        objectId = [inserted objectID];
-    } completion:^(BOOL success, NSError *error) {
-        saveSuccessState = success;
-        saveError = error;
-        existingObject = [currentContext existingObjectWithID:objectId error:&existingObjectError];
+            [expectation fulfill];
+        }];
+
+    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *_Nullable error) {
+        if (error)
+        {
+            NSLog(@"Timeout Error: %@", error);
+        }
     }];
 
-    expect(saveSuccessState).will.beTruthy();
-    expect(saveError).will.beNil();
-    expect(existingObjectError).will.beNil();
-    expect(existingObject).willNot.beNil();
-    expect([existingObject hasChanges]).will.beFalsy();
+    XCTAssertTrue(saveSuccessState);
+    XCTAssertNil(saveError);
+    XCTAssertNil(existingObjectError);
+    XCTAssertNotNil(existingObject);
+    XCTAssertFalse(existingObject.hasChanges);
 }
 
 - (void)testAsynchronousSaveActionMakesInsertedEntitiesAvailableInTheDefaultContext
@@ -163,21 +168,34 @@
     __block NSManagedObjectID *objectId;
     __block NSManagedObject *fetchedObject;
 
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Wait for asynchronous context to save"];
+
     [currentStack saveWithBlock:^(NSManagedObjectContext *localContext) {
-        NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+        NSManagedObject *insertedObject = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+        XCTAssertTrue(insertedObject.hasChanges);
 
-        expect([inserted hasChanges]).to.beTruthy();
+        [localContext performBlockAndWait:^{
+            [localContext obtainPermanentIDsForObjects:@[ insertedObject ] error:nil];
+        }];
+        objectId = [insertedObject objectID];
+    }
+        completion:^(BOOL success, __unused NSError *error) {
+            saveSuccessState = success;
+            fetchedObject = [currentContext objectWithID:objectId];
 
-        [localContext obtainPermanentIDsForObjects:@[inserted] error:nil];
-        objectId = [inserted objectID];
-    } completion:^(BOOL success, NSError *error) {
-        saveSuccessState = success;
-        fetchedObject = [currentContext objectWithID:objectId];
+            [expectation fulfill];
+        }];
+
+    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *_Nullable error) {
+        if (error)
+        {
+            NSLog(@"Timeout Error: %@", error);
+        }
     }];
 
-    expect(saveSuccessState).will.beTruthy();
-    expect(fetchedObject).willNot.beNil();
-    expect([fetchedObject hasChanges]).will.beFalsy();
+    XCTAssertTrue(saveSuccessState);
+    XCTAssertNotNil(fetchedObject);
+    XCTAssertFalse(fetchedObject.hasChanges);
 }
 
 - (void)testAsynchronousSaveActionMakesUpdatesToEntitiesAvailableToTheDefaultContext
@@ -191,39 +209,59 @@
     NSString *const kTestAttributeKey = @"booleanTestAttribute";
 
     [currentStack saveWithBlockAndWait:^(NSManagedObjectContext *localContext) {
-        NSManagedObject *inserted = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
+        NSManagedObject *insertedObject = [SingleEntityWithNoRelationships MR_createEntityInContext:localContext];
 
-        [inserted setValue:@YES forKey:kTestAttributeKey];
+        [insertedObject setValue:@YES forKey:kTestAttributeKey];
 
-        expect([inserted hasChanges]).to.beTruthy();
+        XCTAssertTrue(insertedObject.hasChanges);
 
-        [localContext obtainPermanentIDsForObjects:@[inserted] error:nil];
-        objectId = [inserted objectID];
+        [localContext obtainPermanentIDsForObjects:@[ insertedObject ] error:nil];
+        objectId = [insertedObject objectID];
     }];
 
     fetchedObject = [currentContext objectWithID:objectId];
-    expect([fetchedObject valueForKey:kTestAttributeKey]).to.beTruthy();
+    XCTAssertNotNil([fetchedObject valueForKey:kTestAttributeKey]);
+
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Wait for asynchronous context to save"];
 
     [currentStack saveWithBlock:^(NSManagedObjectContext *localContext) {
         NSManagedObject *changed = [localContext objectWithID:objectId];
 
         [changed setValue:@NO forKey:kTestAttributeKey];
-    } completion:^(BOOL success, NSError *error) {
-        fetchedObject = [currentContext objectWithID:objectId];
+    }
+        completion:^(__unused BOOL success, __unused NSError *error) {
+            fetchedObject = [currentContext objectWithID:objectId];
+
+            [expectation fulfill];
+        }];
+
+    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *_Nullable error) {
+        if (error)
+        {
+            NSLog(@"Timeout Error: %@", error);
+        }
     }];
 
-    expect([fetchedObject valueForKey:kTestAttributeKey]).will.beFalsy();
+    XCTAssertEqualObjects([fetchedObject valueForKey:kTestAttributeKey], @NO);
 }
 
 - (void)testAsynchronousSaveActionPerformedOnBackgroundQueue
 {
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Wait for asynchronous context to save"];
     MagicalRecordStack *currentStack = self.stack;
-    
-    [currentStack saveWithBlock:^(NSManagedObjectContext *localContext) {
-        expect([NSThread currentThread]).toNot.equal([NSThread mainThread]);
-        
-    } completion:^(BOOL success, NSError *error) {
-        expect([NSThread currentThread]).to.equal([NSThread mainThread]);
+
+    [currentStack saveWithBlock:^(__unused NSManagedObjectContext *localContext) {
+        XCTAssertFalse([NSThread isMainThread]);
+    }
+        completion:^(__unused BOOL success, __unused NSError *error) {
+            [expectation fulfill];
+        }];
+
+    [self waitForExpectationsWithTimeout:5.0 handler:^(NSError *_Nullable error) {
+        if (error)
+        {
+            NSLog(@"Timeout Error: %@", error);
+        }
     }];
 }
 

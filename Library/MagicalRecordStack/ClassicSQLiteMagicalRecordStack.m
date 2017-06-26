@@ -11,22 +11,21 @@
 #import "NSManagedObjectContext+MagicalObserving.h"
 #import "MagicalRecordLogging.h"
 
-
 @implementation ClassicSQLiteMagicalRecordStack
 
-- (NSManagedObjectContext *)newConfinementContext;
+- (NSManagedObjectContext *)newPrivateContext
 {
-    NSManagedObjectContext *context = [NSManagedObjectContext MR_confinementContext];
+    NSManagedObjectContext *context = [NSManagedObjectContext MR_privateQueueContext];
     [context setPersistentStoreCoordinator:self.coordinator];
     [context setMergePolicy:NSMergeByPropertyStoreTrumpMergePolicy];
 
     //TODO: This observation needs to be torn down by the user at this time :(
     [self.context MR_observeContextDidSave:context];
-    
+
     return context;
 }
 
-- (void) saveWithBlock:(void (^)(NSManagedObjectContext *))block identifier:(NSString *)contextWorkingName completion:(MRSaveCompletionHandler)completion;
+- (void)saveWithBlock:(void (^)(NSManagedObjectContext *))block identifier:(NSString *)contextWorkingName completion:(MRSaveCompletionHandler)completion
 {
     NSParameterAssert(block);
 
@@ -34,7 +33,7 @@
     dispatch_async(MR_saveQueue(), ^{
         MRLogVerbose(@"%@ save starting", contextWorkingName);
 
-        NSManagedObjectContext *localContext = [self newConfinementContext];
+        NSManagedObjectContext *localContext = [self newPrivateContext];
         NSManagedObjectContext *mainContext = [self context];
 
         [mainContext MR_observeContextDidSave:localContext];

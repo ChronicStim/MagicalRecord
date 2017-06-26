@@ -5,11 +5,6 @@
 
 #import "MagicalRecordTestBase.h"
 
-#define EXP_SHORTHAND
-#import "Expecta.h"
-
-#import "MagicalRecord.h"
-
 @interface MagicalRecordTests : MagicalRecordTestBase
 
 @end
@@ -21,8 +16,9 @@
     // Clean up any store files we created during the test
     MagicalRecordStack *defaultStack = [MagicalRecordStack defaultStack];
 
-    if ((NO == [defaultStack.store.type isEqualToString:NSInMemoryStoreType]) && (nil != defaultStack.store)) {
-        expect([defaultStack.store MR_removePersistentStoreFiles]).to.beTruthy();
+    if ((NO == [defaultStack.store.type isEqualToString:NSInMemoryStoreType]) && (nil != defaultStack.store))
+    {
+        XCTAssertTrue([defaultStack.store MR_removePersistentStoreFiles]);
     }
 
     [super tearDown];
@@ -32,19 +28,21 @@
 {
     MagicalRecordStack *defaultStack = [MagicalRecordStack defaultStack];
 
-    expect(defaultStack.context).toNot.beNil();
-    expect(defaultStack.model).toNot.beNil();
-    expect(defaultStack.coordinator).toNot.beNil();
-    expect(defaultStack.store).toNot.beNil();
+    XCTAssertNotNil(defaultStack.context);
+    XCTAssertNotNil(defaultStack.model);
+    XCTAssertNotNil(defaultStack.coordinator);
+    XCTAssertNotNil(defaultStack.store);
 }
 
 - (void)testCreateDefaultCoreDataStack
 {
     NSURL *testStoreURL = [NSPersistentStore MR_fileURLForStoreName:[MagicalRecord defaultStoreName]];
+    XCTAssertNotNil(testStoreURL);
 
-    expect(testStoreURL).toNot.beNil();
+    NSString *testStorePath = testStoreURL.path;
+    XCTAssertNotNil(testStorePath);
 
-    [[NSFileManager defaultManager] removeItemAtPath:[testStoreURL path] error:nil];
+    [[NSFileManager defaultManager] removeItemAtPath:testStorePath error:nil];
 
     MagicalRecordStack *defaultStack = [SQLiteMagicalRecordStack stackWithStoreAtURL:testStoreURL];
     [defaultStack setModelFromClass:[self class]];
@@ -53,9 +51,8 @@
     [self assertDefaultStack];
 
     NSPersistentStore *defaultStore = defaultStack.store;
-
-    expect([defaultStore type]).to.equal(NSSQLiteStoreType);
-    expect([[defaultStore URL] absoluteString]).to.endWith(@".sqlite");
+    XCTAssertEqual(defaultStore.type, NSSQLiteStoreType);
+    XCTAssertTrue([defaultStore.URL.absoluteString hasSuffix:@".sqlite"]);
 }
 
 - (void)testCreateInMemoryCoreDataStack
@@ -67,7 +64,7 @@
     [self assertDefaultStack];
 
     NSPersistentStore *defaultStore = defaultStack.store;
-    expect([defaultStore type]).to.equal(NSInMemoryStoreType);
+    XCTAssertEqual(defaultStore.type, NSInMemoryStoreType);
 }
 
 - (void)testCreateSqliteStackWithCustomName
@@ -75,8 +72,10 @@
     NSString *testStoreName = @"MyTestDataStore.sqlite";
 
     NSURL *testStoreURL = [NSPersistentStore MR_fileURLForStoreName:testStoreName];
+    NSString *testStorePath = testStoreURL.path;
+    XCTAssertNotNil(testStorePath);
 
-    [[NSFileManager defaultManager] removeItemAtPath:[testStoreURL path] error:nil];
+    [[NSFileManager defaultManager] removeItemAtPath:testStorePath error:nil];
 
     MagicalRecordStack *defaultStack = [SQLiteMagicalRecordStack stackWithStoreNamed:testStoreName];
     [MagicalRecordStack setDefaultStack:defaultStack];
@@ -84,8 +83,8 @@
     [self assertDefaultStack];
 
     NSPersistentStore *defaultStore = defaultStack.store;
-    expect([defaultStore type]).to.equal(NSSQLiteStoreType);
-    expect([[defaultStore URL] absoluteString]).to.endWith(testStoreName);
+    XCTAssertEqual(defaultStore.type, NSSQLiteStoreType);
+    XCTAssertTrue([defaultStore.URL.absoluteString hasSuffix:testStoreName]);
 }
 
 @end

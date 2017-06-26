@@ -6,17 +6,18 @@
 //  Copyright 2011 Magical Panda Software LLC. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
 #import <XCTest/XCTest.h>
 
 @interface FixtureHelpers : NSObject
 
-+ (id) dataFromPListFixtureNamed:(NSString *)fixtureName;
-+ (id) dataFromJSONFixtureNamed:(NSString *)fixtureName;
++ (id)dataFromPListFixtureNamed:(NSString *)fixtureName;
++ (id)dataFromJSONFixtureNamed:(NSString *)fixtureName;
 
 @end
 
 @interface XCTestCase (FixtureHelpers)
 
-- (id) dataFromJSONFixture;
+- (id)dataFromJSONFixture;
 
 @end

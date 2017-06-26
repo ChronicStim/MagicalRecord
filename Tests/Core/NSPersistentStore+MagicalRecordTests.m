@@ -4,12 +4,9 @@
 //
 
 #import <XCTest/XCTest.h>
-#define EXP_SHORTHAND
-#import "Expecta.h"
+#import <MagicalRecord/MagicalRecord.h>
 
-#import "NSPersistentStore+MagicalRecord.h"
 #import "NSPersistentStore+MagicalRecordPrivate.h"
-#import "MagicalRecord.h"
 
 @interface NSPersistentStoreMagicalRecordTests : XCTestCase
 
@@ -21,15 +18,15 @@
 {
     NSString *applicationSupportDirectory = MR_defaultApplicationStorePath();
     NSString *defaultStoreName = [MagicalRecord defaultStoreName];
+    XCTAssertNotNil(defaultStoreName);
+    XCTAssertGreaterThan(defaultStoreName.length, (NSUInteger)0);
 
     NSURL *expectedStoreUrl = [NSURL fileURLWithPath:[NSString stringWithFormat:@"%@/%@", applicationSupportDirectory, defaultStoreName]];
-
-    expect(expectedStoreUrl).toNot.beNil();
+    XCTAssertNotNil(expectedStoreUrl);
 
     NSURL *defaultStoreUrl = [NSPersistentStore MR_defaultLocalStoreUrl];
-
-    expect(defaultStoreUrl).toNot.beNil();
-    expect(defaultStoreUrl).to.equal(expectedStoreUrl);
+    XCTAssertNotNil(defaultStoreUrl);
+    XCTAssertEqualObjects(defaultStoreUrl, expectedStoreUrl);
 }
 
 - (void)testCanFindFileURLInNSApplicationSupportDirectoryWhenProvidingStoreName
@@ -39,17 +36,14 @@
     NSString *testStorePath = [applicationSupportDirectory stringByAppendingPathComponent:storeFileName];
 
     BOOL fileWasCreated = [[NSFileManager defaultManager] createFileAtPath:testStorePath contents:[storeFileName dataUsingEncoding:NSUTF8StringEncoding] attributes:nil];
-
-    expect(fileWasCreated).to.beTruthy();
+    XCTAssertTrue(fileWasCreated);
 
     NSURL *expectedStoreUrl = [NSURL fileURLWithPath:[NSString stringWithFormat:@"%@/%@", applicationSupportDirectory, storeFileName]];
-
-    expect(expectedStoreUrl).toNot.beNil();
+    XCTAssertNotNil(expectedStoreUrl);
 
     NSURL *foundStoreUrl = [NSPersistentStore MR_fileURLForStoreNameIfExistsOnDisk:storeFileName];
-
-    expect(foundStoreUrl).toNot.beNil();
-    expect(foundStoreUrl).to.equal(expectedStoreUrl);
+    XCTAssertNotNil(foundStoreUrl);
+    XCTAssertEqualObjects(foundStoreUrl, expectedStoreUrl);
 
     [[NSFileManager defaultManager] removeItemAtPath:testStorePath error:nil];
 }
@@ -61,17 +55,14 @@
     NSString *testStorePath = [applicationDocumentsDirectory stringByAppendingPathComponent:storeFileName];
 
     BOOL fileWasCreated = [[NSFileManager defaultManager] createFileAtPath:testStorePath contents:[storeFileName dataUsingEncoding:NSUTF8StringEncoding] attributes:nil];
+    XCTAssertTrue(fileWasCreated);
 
-    expect(fileWasCreated).to.beTruthy();
-
-    NSURL *expectedFoundStoreUrl = [NSURL fileURLWithPath:testStorePath];
-
-    expect(expectedFoundStoreUrl).toNot.beNil();
+    NSURL *expectedStoreUrl = [NSURL fileURLWithPath:testStorePath];
+    XCTAssertNotNil(expectedStoreUrl);
 
     NSURL *foundStoreUrl = [NSPersistentStore MR_fileURLForStoreNameIfExistsOnDisk:storeFileName];
-
-    expect(foundStoreUrl).toNot.beNil();
-    expect(foundStoreUrl).to.equal(expectedFoundStoreUrl);
+    XCTAssertNotNil(foundStoreUrl);
+    XCTAssertEqualObjects(foundStoreUrl, expectedStoreUrl);
 
     [[NSFileManager defaultManager] removeItemAtPath:testStorePath error:nil];
 }

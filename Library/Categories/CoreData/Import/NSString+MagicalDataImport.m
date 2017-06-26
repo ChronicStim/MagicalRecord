@@ -12,7 +12,7 @@
 
 @implementation NSString (MagicalRecordDataImport)
 
-- (NSString *) MR_capitalizedFirstCharacterString;
+- (NSString *)MR_capitalizedFirstCharacterString
 {
     if ([self length] > 0)
     {
@@ -22,20 +22,19 @@
     return self;
 }
 
-- (id) MR_relatedValueForRelationship:(NSRelationshipDescription *)relationshipInfo
+- (id)MR_relatedValueForRelationship:(__unused NSRelationshipDescription *)relationshipInfo
 {
     return self;
 }
 
-- (NSString *) MR_lookupKeyForProperty:(NSPropertyDescription *)propertyDescription
+- (NSString *)MR_lookupKeyForProperty:(__unused NSPropertyDescription *)propertyDescription
 {
     return nil;
 }
 
-- (NSDate *)MR_dateWithFormat:(NSString *)dateFormat;
+- (NSDate *)MR_dateWithFormat:(NSString *)dateFormat
 {
     return MRDateFromString(self, dateFormat ?: kMagicalRecordImportDefaultDateFormatString);
 }
 
 @end
-

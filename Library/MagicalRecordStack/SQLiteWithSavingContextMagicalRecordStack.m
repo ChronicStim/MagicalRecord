@@ -17,22 +17,21 @@
 
 @end
 
-
 @implementation SQLiteWithSavingContextMagicalRecordStack
 
 @synthesize context = _context;
 
-- (void)dealloc;
+- (void)dealloc
 {
     [_context MR_stopObservingContextDidSave:_savingContext];
 }
 
-- (NSManagedObjectContext *) context;
+- (NSManagedObjectContext *)context
 {
-    if (_savingContext == nil)
+    if (self.savingContext == nil)
     {
-        _savingContext = [NSManagedObjectContext MR_privateQueueContext];
-        [_savingContext setPersistentStoreCoordinator:[self coordinator]];
+        self.savingContext = [NSManagedObjectContext MR_privateQueueContext];
+        [self.savingContext setPersistentStoreCoordinator:[self coordinator]];
     }
 
     if (_context == nil)
@@ -44,13 +43,6 @@
     }
 
     return _context;
-}
-
-- (NSManagedObjectContext *) newConfinementContext;
-{
-    NSManagedObjectContext *context = [super createConfinementContext];
-    [context setParentContext:[self savingContext]];
-    return context;
 }
 
 @end

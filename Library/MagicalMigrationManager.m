@@ -1,16 +1,12 @@
 //
-//  MagicalMigrationManager.m
-//  Photobucket Next
-//
-//  Created by Saul Mora on 8/6/13.
-//  Copyright (c) 2013 Photobucket. All rights reserved.
-//
+//  Copyright © 2013 Magical Panda Software, LLC. All rights reserved.
 
 #import "MagicalMigrationManager.h"
+#import <CoreData/CoreData.h>
 
 @implementation MagicalMigrationManager
 
-- (instancetype) initWithSourceModelName:(NSString *)sourceName targetModelName:(NSString *)targetName;
+- (instancetype)initWithSourceModelName:(NSString *)sourceName targetModelName:(NSString *)targetName
 {
     self = [super init];
     if (self)
@@ -21,7 +17,7 @@
     return self;
 }
 
-- (NSManagedObjectModel *) managedObjectModelNamed:(NSString *)modelName;
+- (NSManagedObjectModel *)managedObjectModelNamed:(NSString *)modelName
 {
     NSString *bundleModelName = modelName;
     if (self.versionedModelName)
@@ -35,27 +31,22 @@
     return model;
 }
 
-- (NSManagedObjectModel *) sourceModel;
+- (NSManagedObjectModel *)sourceModel
 {
     return [self managedObjectModelNamed:self.sourceModelName];
 }
 
-- (NSManagedObjectModel *) targetModel;
+- (NSManagedObjectModel *)targetModel
 {
     return [self managedObjectModelNamed:self.targetModelName];
 }
 
-- (BOOL) migrateStoreAtURL:(NSURL *)sourceStoreURL toStoreAtURL:(NSURL *)targetStoreURL
+- (BOOL)migrateStoreAtURL:(NSURL *)sourceStoreURL toStoreAtURL:(NSURL *)targetStoreURL
 {
     return [self migrateStoreAtURL:sourceStoreURL toStoreAtURL:targetStoreURL mappingModelURL:nil];
 }
 
-- (BOOL) migrateStoreAtURL:(NSURL *)sourceStoreURL toStoreAtURL:(NSURL *)targetStoreURL mappingModelURL:(NSURL *)mappingModelURL;
-{
-    return [self migrateStoreAtURL:sourceStoreURL toStoreAtURL:targetStoreURL mappingModelURL:mappingModelURL progressiveMigration:YES];
-}
-
-- (BOOL) migrateStoreAtURL:(NSURL *)sourceStoreURL toStoreAtURL:(NSURL *)targetStoreURL mappingModelURL:(NSURL *)mappingModelURL progressiveMigration:(BOOL)progressiveMigration;
+- (BOOL)migrateStoreAtURL:(NSURL *)sourceStoreURL toStoreAtURL:(NSURL *)targetStoreURL mappingModelURL:(NSURL *)mappingModelURL
 {
     NSManagedObjectModel *sourceModel = [self sourceModel];
     NSManagedObjectModel *targetModel = [self targetModel];
@@ -87,7 +78,7 @@
     return success;
 }
 
-- (NSMappingModel *) mappingModelAtURL:(NSURL *)mappingModelURL forSourceModel:(NSManagedObjectModel *)sourceModel targetModel:(NSManagedObjectModel *)targetModel;
+- (NSMappingModel *)mappingModelAtURL:(NSURL *)mappingModelURL forSourceModel:(NSManagedObjectModel *)sourceModel targetModel:(NSManagedObjectModel *)targetModel
 {
     NSMappingModel *mappingModel = nil;
     if (mappingModelURL)
@@ -96,7 +87,7 @@
     }
     if (mappingModelURL == nil)
     {
-        mappingModel = [NSMappingModel mappingModelFromBundles:@[[NSBundle mainBundle]]
+        mappingModel = [NSMappingModel mappingModelFromBundles:@[ [NSBundle mainBundle] ]
                                                 forSourceModel:sourceModel
                                               destinationModel:targetModel];
     }
@@ -113,11 +104,12 @@
     return mappingModel;
 }
 
-- (BOOL) MagicalMigrationManager_progressivelyMigrateStoreAtURL:(NSURL *)sourceStoreURL toStoreAtURL:(NSURL *)targetStoreURL ofType:(NSString *)type error:(NSError **)error;
+- (BOOL)MagicalMigrationManager_progressivelyMigrateStoreAtURL:(NSURL *)sourceStoreURL toStoreAtURL:(NSURL *)targetStoreURL ofType:(NSString *)type error:(NSError *__autoreleasing *)error
 {
     NSManagedObjectModel *targetModel = [self targetModel];
     NSDictionary *sourceMetadata = [NSPersistentStoreCoordinator metadataForPersistentStoreOfType:type
                                                                                               URL:sourceStoreURL
+                                                                                          options:nil
                                                                                             error:error];
 
     if (nil == sourceMetadata)
@@ -136,8 +128,8 @@
     }
 
     NSManagedObjectModel *sourceModel = [NSManagedObjectModel mergedModelFromBundles:@[
-                                                                                         [NSBundle mainBundle]
-                                                                                     ]
+        [NSBundle mainBundle]
+    ]
                                                                     forStoreMetadata:sourceMetadata];
 
     NSManagedObjectModel *destinationModel = nil;
@@ -182,7 +174,7 @@
                                                                   error:error];
 }
 
-- (NSArray *) MagicalMigrationManager_modelPaths;
+- (NSArray *)MagicalMigrationManager_modelPaths
 {
     //Find all of the mom and momd files in the Resources directory
     NSMutableArray *modelPaths = [NSMutableArray array];
@@ -201,7 +193,7 @@
     return modelPaths;
 }
 
-- (BOOL) MagicalMigrationManager_getDestinationModel:(NSManagedObjectModel **)destinationModel mappingModel:(NSMappingModel **)mappingModel modelName:(NSString **)modelName forSourceModel:(NSManagedObjectModel *)sourceModel;
+- (BOOL)MagicalMigrationManager_getDestinationModel:(NSManagedObjectModel *__autoreleasing *)destinationModel mappingModel:(NSMappingModel *__autoreleasing *)mappingModel modelName:(NSString *__autoreleasing *)modelName forSourceModel:(NSManagedObjectModel *)sourceModel
 {
     NSArray *modelPaths = [self MagicalMigrationManager_modelPaths];
     if ([modelPaths count] == 0)
@@ -218,8 +210,8 @@
     {
         model = [[NSManagedObjectModel alloc] initWithContentsOfURL:[NSURL fileURLWithPath:modelPath]];
         mapping = [NSMappingModel mappingModelFromBundles:@[
-                                                              [NSBundle mainBundle]
-                                                          ]
+            [NSBundle mainBundle]
+        ]
                                            forSourceModel:sourceModel
                                          destinationModel:model];
         // If we found a mapping model then proceed
@@ -243,30 +235,33 @@
     return YES;
 }
 
-- (BOOL) MagicalMigrationManager_backupSourceStoreAtURL:(NSURL *)sourceStoreURL movingDestinationStoreAtURL:(NSURL *)destinationStoreURL error:(NSError **)error;
+- (BOOL)MagicalMigrationManager_backupSourceStoreAtURL:(NSURL *)sourceStoreURL movingDestinationStoreAtURL:(NSURL *)destinationStoreURL error:(NSError *__autoreleasing *)error
 {
     NSString *guid = [[NSProcessInfo processInfo] globallyUniqueString];
     NSString *backupPath = [NSTemporaryDirectory() stringByAppendingPathComponent:guid];
-
+    
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    if (![fileManager moveItemAtPath:sourceStoreURL.path
-                              toPath:backupPath
-                               error:error])
+    NSString *sourceStorePath = sourceStoreURL.path;
+
+    if (sourceStorePath == nil ||
+        NO == [fileManager moveItemAtPath:sourceStorePath toPath:backupPath error:error])
     {
         // Failed to copy the file
         return NO;
     }
+
+    NSString *destinationStorePath = destinationStoreURL.path;
+
     // Move the destination to the source path
-    if (![fileManager moveItemAtPath:destinationStoreURL.path
-                              toPath:sourceStoreURL.path
-                               error:error])
+    if (destinationStorePath == nil ||
+        NO == [fileManager moveItemAtPath:destinationStorePath toPath:sourceStorePath error:error])
     {
         // Try to back out the source move first, no point in checking it for errors
-        [fileManager moveItemAtPath:backupPath
-                             toPath:sourceStoreURL.path
-                              error:nil];
+        [fileManager moveItemAtPath:backupPath toPath:sourceStorePath error:nil];
+
         return NO;
     }
+
     return YES;
 }
 

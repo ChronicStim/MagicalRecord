@@ -3,7 +3,6 @@
 //  Copyright 2010 Magical Panda Software, LLC All rights reserved.
 //
 
-
 #ifdef __OBJC__
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
@@ -35,6 +34,7 @@
 
 #import "NSManagedObject+MagicalRecord.h"
 #import "NSManagedObject+MagicalRequests.h"
+#import "NSManagedObject+MagicalFetching.h"
 #import "NSManagedObject+MagicalFinders.h"
 #import "NSManagedObject+MagicalAggregation.h"
 #import "NSManagedObjectContext+MagicalRecord.h"

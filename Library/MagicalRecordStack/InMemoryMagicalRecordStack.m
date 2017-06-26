@@ -8,18 +8,20 @@
 
 #import "MagicalRecordStack+Private.h"
 #import "InMemoryMagicalRecordStack.h"
+#import "NSManagedObjectContext+MagicalRecord.h"
 #import "NSPersistentStoreCoordinator+MagicalInMemoryStoreAdditions.h"
 
 @implementation InMemoryMagicalRecordStack
 
-- (NSManagedObjectContext *) newConfinementContext;
+- (NSManagedObjectContext *)newPrivateContext
 {
-    NSManagedObjectContext *context = [super createConfinementContext];
-    [context setParentContext:[self context]];
+    NSManagedObjectContext *context = [NSManagedObjectContext MR_privateQueueContext];
+    context.parentContext = self.context;
+
     return context;
 }
 
-- (NSPersistentStoreCoordinator *) createCoordinatorWithOptions:(NSDictionary *)options
+- (NSPersistentStoreCoordinator *)createCoordinatorWithOptions:(NSDictionary *)options
 {
     NSPersistentStoreCoordinator *coordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self model]];
 

@@ -9,12 +9,14 @@
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
 
+extern NSUInteger const kMagicalRecordImportMaximumAttributeFailoverDepth;
+
 @interface NSObject (MagicalRecordDataImport)
 
-- (NSString *) MR_lookupKeyForProperty:(NSPropertyDescription *)propertyDescription;
-- (id) MR_valueForAttribute:(NSAttributeDescription *)attributeInfo;
+- (NSString *)MR_lookupKeyForProperty:(NSPropertyDescription *)propertyDescription;
+- (id)MR_valueForAttribute:(NSAttributeDescription *)attributeInfo;
 
-- (NSString *) MR_lookupKeyForRelationship:(NSRelationshipDescription *)relationshipInfo;
-- (id) MR_relatedValueForRelationship:(NSRelationshipDescription *)relationshipInfo;
+- (NSString *)MR_lookupKeyForRelationship:(NSRelationshipDescription *)relationshipInfo;
+- (id)MR_relatedValueForRelationship:(NSRelationshipDescription *)relationshipInfo;
 
 @end

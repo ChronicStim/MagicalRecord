@@ -6,6 +6,8 @@
 //  Copyright (c) 2012 Magical Panda Software LLC. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
+
 NSDate *MRAdjustDateForDST(NSDate *date);
 NSDate *MRDateFromString(NSString *value, NSString *format);
 NSDate *MRDateFromNumber(NSNumber *value, BOOL milliseconds);
@@ -17,7 +19,7 @@ NSString *MRPrimaryKeyNameFromString(NSString *value);
 #import <UIKit/UIKit.h>
 UIColor *MRColorFromString(NSString *serializedColor);
 #else
-#import <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
 NSColor *MRColorFromString(NSString *serializedColor);
 #endif
 
