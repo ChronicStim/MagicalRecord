@@ -52,8 +52,8 @@
     }
 
     MRLog(@"→ Saving %@", [self MR_description]);
-    MRLog(@"→ Save Parents? %@", @(saveParentContexts));
-    MRLog(@"→ Save Synchronously? %@", @(syncSave));
+    //MRLog(@"→ Save Parents? %@", @(saveParentContexts));
+    //MRLog(@"→ Save Synchronously? %@", @(syncSave));
 
     id saveBlock = ^{
         NSError *error = nil;
