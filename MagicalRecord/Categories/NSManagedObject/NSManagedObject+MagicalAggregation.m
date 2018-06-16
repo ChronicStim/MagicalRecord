@@ -48,9 +48,15 @@
 
 + (NSUInteger) MR_countOfEntitiesWithContext:(NSManagedObjectContext *)context;
 {
-	NSError *error = nil;
-	NSUInteger count = [context countForFetchRequest:[self MR_createFetchRequestInContext:context] error:&error];
-	[MagicalRecord handleErrors:error];
+    NSUInteger __block count = 0;
+    __weak __typeof__(self) weakSelf = self;
+    dispatchCoreDataQueue(context, YES, ^{
+        __typeof__(self) strongSelf = weakSelf;
+        
+        NSError *error = nil;
+        count = [context countForFetchRequest:[strongSelf MR_createFetchRequestInContext:context] error:&error];
+        [MagicalRecord handleErrors:error];
+    });
 	
     return count;
 }

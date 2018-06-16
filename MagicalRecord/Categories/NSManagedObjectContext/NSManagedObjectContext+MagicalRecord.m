@@ -145,7 +145,12 @@ static NSString * const kMagicalRecordNSManagedObjectContextWorkingName = @"kNSM
     if (defaultManagedObjectContext_ == nil)
     {
         NSManagedObjectContext *rootContext = [self MR_contextWithStoreCoordinator:coordinator];
-        [self MR_setRootSavingContext:rootContext];
+
+        __weak __typeof__(self) weakSelf = self;
+        [rootContext performBlockAndWait:^{
+            __typeof__(self) strongSelf = weakSelf;
+            [strongSelf MR_setRootSavingContext:rootContext];
+        }];
         
         NSManagedObjectContext *defaultContext = [self MR_newMainQueueContext];
         [self MR_setDefaultContext:defaultContext];
@@ -235,12 +240,23 @@ static NSString * const kMagicalRecordNSManagedObjectContextWorkingName = @"kNSM
 
 - (void) MR_setWorkingName:(NSString *)workingName;
 {
-    [[self userInfo] setObject:workingName forKey:kMagicalRecordNSManagedObjectContextWorkingName];
+    __weak __typeof__(self) weakSelf = self;
+    [self performBlockAndWait:^{
+        __typeof__(self) strongSelf = weakSelf;
+
+        [[strongSelf userInfo] setObject:workingName forKey:kMagicalRecordNSManagedObjectContextWorkingName];
+    }];
 }
 
 - (NSString *) MR_workingName;
 {
-    NSString *workingName = [[self userInfo] objectForKey:kMagicalRecordNSManagedObjectContextWorkingName];
+    NSString __block *workingName = nil;
+    
+    __weak __typeof__(self) weakSelf = self;
+    dispatchCoreDataQueue(self, YES, ^{
+        workingName = [[weakSelf userInfo] objectForKey:kMagicalRecordNSManagedObjectContextWorkingName];
+    });
+
     if (nil == workingName)
     {
         workingName = @"UNNAMED";
