@@ -38,71 +38,103 @@
     BOOL syncSave           = ((mask & MRSaveSynchronously) == MRSaveSynchronously);
     BOOL saveParentContexts = ((mask & MRSaveParentContexts) == MRSaveParentContexts);
 
-    if (![self hasChanges]) {
-        MRLog(@"NO CHANGES IN ** %@ ** CONTEXT - NOT SAVING", [self MR_workingName]);
-
-        if (completion)
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                completion(NO, nil);
-            });
+    __block BOOL hasChanges = NO;
+    __block NSString *workingName = nil;
+    __block NSManagedObjectContext *parentContext = nil;
+    
+    [self performBlockAndWait:^{
+        hasChanges = [self hasChanges];
+        workingName = [self MR_workingName];
+        if (saveParentContexts) {
+            parentContext = [self parentContext];
         }
-        
-        return;
+    }];
+    
+
+    if (!hasChanges) {
+        MRLog(@"NO CHANGES IN ** %@ ** CONTEXT - NOT SAVING", workingName);
+
+        if (saveParentContexts && parentContext)
+        {
+            MRLog(@"Proceeding to save parent context %@", [parentContext MR_description]);
+        }
+        else
+        {
+            if (completion)
+            {
+                completion(YES, nil);
+            }
+            
+            return;
+        }
     }
 
-    MRLog(@"→ Saving %@", [self MR_description]);
-    //MRLog(@"→ Save Parents? %@", @(saveParentContexts));
-    //MRLog(@"→ Save Synchronously? %@", @(syncSave));
-
-    id saveBlock = ^{
+    void (^saveBlock)(void) = ^{
+        NSString *optionsSummary = @"";
+        optionsSummary = [optionsSummary stringByAppendingString:saveParentContexts ? @"Save Parents," : @""];
+        optionsSummary = [optionsSummary stringByAppendingString:syncSave ? @"Sync Save" : @""];
+        
+        MRLog(@"→ Saving %@ [%@]", [self MR_description], optionsSummary);
+        
         NSError *error = nil;
-        BOOL     saved = NO;
-
+        BOOL saved = NO;
+        
         @try
         {
             saved = [self save:&error];
         }
-        @catch(NSException *exception)
+        @catch (NSException *exception)
         {
-            MRLog(@"Unable to perform save: %@", (id)[exception userInfo] ? : (id)[exception reason]);
+            MRLogError(@"Unable to perform save: %@", (id)[ exception userInfo ] ?: (id)[ exception reason ]);
         }
-
         @finally
         {
-            if (!saved) {
+            if (!saved)
+            {
                 [MagicalRecord handleErrors:error];
-
-                if (completion) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        completion(saved, error);
-                    });
-                }
-            } else {
-                // If we're the default context, save to disk too (the user expects it to persist)
-                BOOL isDefaultContext = (self == [[self class] MR_defaultContext]);
-                BOOL shouldSaveParentContext = ((YES == saveParentContexts) || isDefaultContext);
                 
-                if (shouldSaveParentContext && [self parentContext]) {
-                    [[self parentContext] MR_saveWithOptions:mask completion:completion];
+                if (completion)
+                {
+                    completion(saved, error);
                 }
+            }
+            else
+            {
                 // If we should not save the parent context, or there is not a parent context to save (root context), call the completion block
-                else {
+                if ((YES == saveParentContexts) && [self parentContext])
+                {
+                    MRSaveContextOptions parentContentSaveOptions = (MRSaveContextOptions)(MRSaveParentContexts | MRSaveSynchronously);
+                    [[self parentContext] MR_saveWithOptions:parentContentSaveOptions completion:completion];
+                }
+                // If we are not the default context (And therefore need to save the root context, do the completion action if one was specified
+                else
+                {
                     MRLog(@"→ Finished saving: %@", [self MR_description]);
                     
-                    if (completion) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            completion(saved, error);
-                        });
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+                    NSUInteger numberOfInsertedObjects = [[self insertedObjects] count];
+                    NSUInteger numberOfUpdatedObjects = [[self updatedObjects] count];
+                    NSUInteger numberOfDeletedObjects = [[self deletedObjects] count];
+#pragma clang diagnostic pop
+                    
+                    MRLog(@"Objects - Inserted %tu, Updated %tu, Deleted %tu", numberOfInsertedObjects, numberOfUpdatedObjects, numberOfDeletedObjects);
+                    
+                    if (completion)
+                    {
+                        completion(saved, error);
                     }
                 }
             }
         }
     };
-
-    if (YES == syncSave) {
+    
+    if (YES == syncSave)
+    {
         [self performBlockAndWait:saveBlock];
-    } else {
+    }
+    else
+    {
         [self performBlock:saveBlock];
     }
 }

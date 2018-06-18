@@ -253,9 +253,10 @@ static NSString * const kMagicalRecordNSManagedObjectContextWorkingName = @"kNSM
     NSString __block *workingName = nil;
     
     __weak __typeof__(self) weakSelf = self;
-    dispatchCoreDataQueue(self, YES, ^{
-        workingName = [[weakSelf userInfo] objectForKey:kMagicalRecordNSManagedObjectContextWorkingName];
-    });
+    [self performBlockAndWait:^{
+        __typeof__(self) strongSelf = weakSelf;
+        workingName = [[strongSelf userInfo] objectForKey:kMagicalRecordNSManagedObjectContextWorkingName];
+    }];
 
     if (nil == workingName)
     {
@@ -263,6 +264,5 @@ static NSString * const kMagicalRecordNSManagedObjectContextWorkingName = @"kNSM
     }
     return workingName;
 }
-
 
 @end

@@ -45,9 +45,6 @@
     #import "NSEntityDescription+MagicalDataImport.h"
     #import "NSPersistentStoreCoordinator+CPTDualStore.h"
 
-    #import "NSManagedObjectContext+CPTMagicalRecord.h"
-    #import "MagicalRecord+CPTActions.h"
-
 #endif
 
 // @see https://github.com/ccgus/fmdb/commit/aef763eeb64e6fa654e7d121f1df4c16a98d9f4f
