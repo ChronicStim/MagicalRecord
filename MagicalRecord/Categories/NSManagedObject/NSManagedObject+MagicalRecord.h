@@ -46,5 +46,8 @@
 - (id) MR_inContext:(NSManagedObjectContext *)otherContext;
 - (id) MR_inThreadContext;
 
+- (void)MR_refreshObjectMergeChanges:(BOOL)mergeChanges;
+- (void)MR_obtainPermanentObjectID;
+
 @end
 
