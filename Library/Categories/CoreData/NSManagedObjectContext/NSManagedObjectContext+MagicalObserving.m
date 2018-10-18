@@ -98,11 +98,13 @@ NSString *const MagicalRecordDidMergeChangesFromiCloudNotification = @"kMagicalR
     if (fromContext == self)
         return;
 
+    __weak __typeof__(self) weakSelf = self;
     void (^mergeBlock)(void) = ^{
+        __typeof__(self) strongSelf = weakSelf;
         MRLogVerbose(@"Merging changes from %@ to %@ %@",
-                     [fromContext MR_workingName], [self MR_workingName],
+                     [fromContext MR_workingName], [strongSelf MR_workingName],
                      ([NSThread isMainThread] ? @" *** on Main Thread ***" : @""));
-        [self mergeChangesFromContextDidSaveNotification:notification];
+        [strongSelf mergeChangesFromContextDidSaveNotification:notification];
     };
 
     [self performBlock:mergeBlock];

@@ -72,14 +72,14 @@ static NSString *const kMagicalRecordNSManagedObjectContextWorkingName = @"kNSMa
 
 + (NSManagedObjectContext *)MR_mainQueueContext
 {
-    NSManagedObjectContext *context = [[self alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+    NSManagedObjectContext *context = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
     [context MR_setWorkingName:@"Main Queue"];
     return context;
 }
 
 + (NSManagedObjectContext *)MR_privateQueueContext
 {
-    NSManagedObjectContext *context = [[self alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+    NSManagedObjectContext *context = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
     [context MR_setWorkingName:@"Private Queue"];
     return context;
 }
@@ -89,7 +89,7 @@ static NSString *const kMagicalRecordNSManagedObjectContextWorkingName = @"kNSMa
     NSManagedObjectContext *context = nil;
     if (coordinator != nil)
     {
-        context = [self MR_privateQueueContext];
+        context = [NSManagedObjectContext MR_privateQueueContext];
 
         [context performBlockAndWait:^{
             [context setPersistentStoreCoordinator:coordinator];
@@ -102,18 +102,27 @@ static NSString *const kMagicalRecordNSManagedObjectContextWorkingName = @"kNSMa
 
 - (void)MR_setWorkingName:(NSString *)workingName
 {
+    __weak __typeof__(self) weakSelf = self;
     [self performBlockAndWait:^{
-        self.userInfo[kMagicalRecordNSManagedObjectContextWorkingName] = workingName;
+        __typeof__(self) strongSelf = weakSelf;
+        strongSelf.userInfo[kMagicalRecordNSManagedObjectContextWorkingName] = workingName;
     }];
 }
 
 - (NSString *)MR_workingName
 {
-    NSString *workingName = self.userInfo[kMagicalRecordNSManagedObjectContextWorkingName];
-    if (workingName.length == 0)
-    {
-        workingName = @"UNNAMED";
-    }
+    NSString __block *workingName = nil;
+    __weak __typeof__(self) weakSelf = self;
+    [self performBlockAndWait:^{
+        __typeof__(self) strongSelf = weakSelf;
+
+        workingName = strongSelf.userInfo[kMagicalRecordNSManagedObjectContextWorkingName];
+        if (workingName.length == 0)
+        {
+            workingName = @"UNNAMED";
+        }
+    }];
+    
     return workingName;
 }
 

@@ -48,9 +48,17 @@
 
 + (NSUInteger)MR_countOfEntitiesWithContext:(NSManagedObjectContext *)context
 {
-    NSError *error = nil;
-    NSUInteger count = [context countForFetchRequest:[self MR_requestAll] error:&error];
-    [[error MR_coreDataDescription] MR_logToConsole];
+    NSUInteger __block count = 0;
+    __weak __typeof__(self) weakSelf = self;
+    [context performBlockAndWait:^{
+        __typeof__(self) strongSelf = weakSelf;
+        
+        NSError *error = nil;
+        count = [context countForFetchRequest:[strongSelf MR_requestAll] error:&error];
+        if (nil != error) {
+            [[error MR_coreDataDescription] MR_logToConsole];
+        }
+    }];
 
     return count;
 }
@@ -62,12 +70,19 @@
 
 + (NSUInteger)MR_countOfEntitiesWithPredicate:(NSPredicate *)searchFilter inContext:(NSManagedObjectContext *)context
 {
-    NSError *error = nil;
-    NSFetchRequest *request = [self MR_requestAll];
-    [request setPredicate:searchFilter];
-
-    NSUInteger count = [context countForFetchRequest:request error:&error];
-    [[error MR_coreDataDescription] MR_logToConsole];
+    NSUInteger __block count = 0;
+    __weak __typeof__(self) weakSelf = self;
+    [context performBlockAndWait:^{
+        __typeof__(self) strongSelf = weakSelf;
+        
+        NSError *error = nil;
+        NSFetchRequest *request = [strongSelf MR_requestAll];
+        [request setPredicate:searchFilter];
+        count = [context countForFetchRequest:request error:&error];
+        if (nil != error) {
+            [[error MR_coreDataDescription] MR_logToConsole];
+        }
+    }];
 
     return count;
 }

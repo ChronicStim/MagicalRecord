@@ -91,18 +91,26 @@
     BOOL saveSynchronously = ((saveOptions & MRContextSaveOptionsSaveSynchronously) == MRContextSaveOptionsSaveSynchronously);
 
     __block BOOL hasChanges = NO;
-
+    __block NSString *workingName = nil;
+    __block NSManagedObjectContext *parentContext = nil;
+    
+    __weak __typeof__(self) weakSelf = self;
     [self performBlockAndWait:^{
-        hasChanges = [self hasChanges];
+        __typeof__(self) strongSelf = weakSelf;
+        hasChanges = [strongSelf hasChanges];
+        workingName = [strongSelf MR_workingName];
+        if (saveParentContexts) {
+            parentContext = [strongSelf parentContext];
+        }
     }];
 
     if (!hasChanges)
     {
-        MRLogInfo(@"NO CHANGES IN ** %@ ** CONTEXT - NOT SAVING", [self MR_workingName]);
+        MRLogInfo(@"NO CHANGES IN ** %@ ** CONTEXT - NOT SAVING", workingName);
 
-        if (saveParentContexts && [self parentContext])
+        if (saveParentContexts && parentContext)
         {
-            MRLogVerbose(@"Proceeding to save parent context %@", [[self parentContext] MR_description]);
+            MRLogVerbose(@"Proceeding to save parent context %@", [parentContext MR_description]);
         }
         else
         {
@@ -116,18 +124,20 @@
     }
 
     void (^saveBlock)(void) = ^{
+        __typeof__(self) strongSelf = weakSelf;
+
         NSString *optionsSummary = @"";
         optionsSummary = [optionsSummary stringByAppendingString:saveParentContexts ? @"Save Parents," : @""];
-        optionsSummary = [optionsSummary stringByAppendingString:saveSynchronously ? @"Sync Save" : @""];
-
-        MRLogVerbose(@"→ Saving %@ [%@]", [self MR_description], optionsSummary);
-
+        optionsSummary = [optionsSummary stringByAppendingString:saveSynchronously ? @"Save Synchronously" : @""];
+        
+        MRLogInfo(@"→ Saving %@ [%@]", [strongSelf MR_description], optionsSummary);
+        
         NSError *error = nil;
         BOOL saved = NO;
 
         @try
         {
-            saved = [self save:&error];
+            saved = [strongSelf save:&error];
         }
         @catch (NSException *exception)
         {
@@ -147,25 +157,25 @@
             else
             {
                 // If we should not save the parent context, or there is not a parent context to save (root context), call the completion block
-                if ((YES == saveParentContexts) && [self parentContext])
+                if ((YES == saveParentContexts) && [strongSelf parentContext])
                 {
                     MRContextSaveOptions parentContentSaveOptions = (MRContextSaveOptions)(MRContextSaveOptionsSaveParentContexts | MRContextSaveOptionsSaveSynchronously);
-                    [[self parentContext] MR_saveWithOptions:parentContentSaveOptions completion:completion];
+                    [[strongSelf parentContext] MR_saveWithOptions:parentContentSaveOptions completion:completion];
                 }
                 // If we are not the default context (And therefore need to save the root context, do the completion action if one was specified
                 else
                 {
-                    MRLogInfo(@"→ Finished saving: %@", [self MR_description]);
+                    MRLogInfo(@"→ Finished saving: %@", [strongSelf MR_description]);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
-                    NSUInteger numberOfInsertedObjects = [[self insertedObjects] count];
-                    NSUInteger numberOfUpdatedObjects = [[self updatedObjects] count];
-                    NSUInteger numberOfDeletedObjects = [[self deletedObjects] count];
+                    NSUInteger numberOfInsertedObjects = [[strongSelf insertedObjects] count];
+                    NSUInteger numberOfUpdatedObjects = [[strongSelf updatedObjects] count];
+                    NSUInteger numberOfDeletedObjects = [[strongSelf deletedObjects] count];
 #pragma clang diagnostic pop
-
-                    MRLogVerbose(@"Objects - Inserted %tu, Updated %tu, Deleted %tu", numberOfInsertedObjects, numberOfUpdatedObjects, numberOfDeletedObjects);
-
+                    
+                    MRLogInfo(@"Objects - Inserted %tu, Updated %tu, Deleted %tu", numberOfInsertedObjects, numberOfUpdatedObjects, numberOfDeletedObjects);
+                    
                     if (completion)
                     {
                         completion(saved, error);
