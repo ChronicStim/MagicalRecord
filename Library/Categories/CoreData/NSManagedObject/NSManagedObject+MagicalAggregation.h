@@ -125,7 +125,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSArray *)MR_aggregateOperation:(NSString *)collectionOperator onAttribute:(NSString *)attributeName withPredicate:(NSPredicate *)predicate groupBy:(NSString *)groupingKeyPath;
 
 - (nullable id)MR_objectWithMinValueFor:(nonnull NSString *)property;
-- (id)MR_objectWithMinValueFor:(NSString *)property inContext:(NSManagedObjectContext *)context;
+- (nullable id)MR_objectWithMinValueFor:(NSString *)property inContext:(NSManagedObjectContext *)context;
 
 @end
 NS_ASSUME_NONNULL_END
