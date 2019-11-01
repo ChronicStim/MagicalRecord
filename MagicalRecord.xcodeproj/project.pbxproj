@@ -1222,10 +1222,11 @@
 			};
 			buildConfigurationList = C721C7A513D0A3750097AB6F /* Build configuration list for PBXProject "MagicalRecord" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = C721C7A013D0A3750097AB6F;
 			productRefGroup = C721C7B113D0A3AF0097AB6F /* Products */;
@@ -1702,6 +1703,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
@@ -1775,7 +1777,6 @@
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WARNING_CFLAGS = (
-					"-Weverything",
 					"-Wno-objc-missing-property-synthesis",
 					"-Wno-gnu",
 					"-Wno-pedantic",
@@ -1783,6 +1784,8 @@
 					"-Wno-cast-qual",
 					"-Wno-reserved-id-macro",
 					"-Wno-auto-import",
+					"-Wall",
+					"-Wextra",
 				);
 				WARNING_LDFLAGS = "-Wno-objc-messaging-id";
 			};
@@ -1792,6 +1795,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES;
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
@@ -1864,7 +1868,6 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				WARNING_CFLAGS = (
-					"-Weverything",
 					"-Wno-objc-missing-property-synthesis",
 					"-Wno-gnu",
 					"-Wno-pedantic",
@@ -1872,6 +1875,8 @@
 					"-Wno-cast-qual",
 					"-Wno-reserved-id-macro",
 					"-Wno-auto-import",
+					"-Wall",
+					"-Wextra",
 				);
 				WARNING_LDFLAGS = "-Wno-objc-messaging-id";
 			};

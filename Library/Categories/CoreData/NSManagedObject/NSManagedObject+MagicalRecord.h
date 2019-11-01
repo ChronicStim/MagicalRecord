@@ -51,8 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSArray *)MR_executeFetchRequest:(NSFetchRequest *)request;
 + (NSArray *)MR_executeFetchRequest:(NSFetchRequest *)request inContext:(NSManagedObjectContext *)context;
-+ (id)MR_executeFetchRequestAndReturnFirstObject:(NSFetchRequest *)request;
-+ (id)MR_executeFetchRequestAndReturnFirstObject:(NSFetchRequest *)request inContext:(NSManagedObjectContext *)context;
++ (nullable id)MR_executeFetchRequestAndReturnFirstObject:(NSFetchRequest *)request;
++ (nullable id)MR_executeFetchRequestAndReturnFirstObject:(NSFetchRequest *)request inContext:(NSManagedObjectContext *)context;
 
 + (NSManagedObjectID *) MR_executeFetchRequestAndReturnFirstNSManagedObjectID:(NSFetchRequest *)request;
 + (NSManagedObjectID *) MR_executeFetchRequestAndReturnFirstNSManagedObjectID:(NSFetchRequest *)request inContext:(NSManagedObjectContext *)context;
